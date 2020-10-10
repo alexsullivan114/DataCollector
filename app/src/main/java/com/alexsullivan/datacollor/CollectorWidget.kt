@@ -9,10 +9,12 @@ import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
 
-private val states = mutableListOf(false)
-/**
- * Implementation of App Widget functionality.
- */
+private val states = mutableMapOf<Trackable, Boolean>().apply {
+    for (trackable in Trackable.values()) {
+        put(trackable, false)
+    }
+}
+
 class CollectorWidget : AppWidgetProvider() {
 
 
@@ -37,10 +39,9 @@ class CollectorWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (tag == intent.action) {
-            Log.d("Woof", "Old States: $states")
-            states[0] = !states[0]
-            Log.d("Woof", "new States: $states")
+        if (Trackable.values().map { it.name }.contains(intent.action)) {
+            val trackable = Trackable.values().first { it.name == intent.action }
+            states[trackable] = !states.getValue(trackable)
             val ids: IntArray = AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, CollectorWidget::class.java))
             onUpdate(context, AppWidgetManager.getInstance(context), ids)
         }
@@ -58,15 +59,18 @@ class CollectorWidget : AppWidgetProvider() {
         appWidgetId: Int
     ) {
         val remoteViews = RemoteViews(context.packageName, R.layout.collector_widget)
-        remoteViews.setOnClickPendingIntent(R.id.check1, getPendingSelfIntent(context, tag))
-        val checkbox = if (states[0]) R.drawable.ic_baseline_check_box_24 else R.drawable.ic_baseline_check_box_outline_blank_24
-        remoteViews.setImageViewResource(R.id.check1,  checkbox)
+        remoteViews.removeAllViews(R.id.grid)
+        for (trackable in Trackable.values()) {
+            val checkbox =
+                if (states.getValue(trackable)) R.drawable.ic_baseline_check_box_24 else R.drawable.ic_baseline_check_box_outline_blank_24
+            val item = RemoteViews(context.packageName, R.layout.trackable_item)
+            remoteViews.addView(R.id.grid, item)
+            item.setTextViewText(R.id.text, trackable.title)
+            item.setImageViewResource(R.id.check, checkbox)
+            item.setOnClickPendingIntent(R.id.check, getPendingSelfIntent(context, trackable.name))
+        }
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
-    }
-
-    companion object {
-        private const val tag = "Tag"
     }
 }
 

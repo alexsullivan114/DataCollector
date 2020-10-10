@@ -1,111 +1,12 @@
 <GridLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/grid"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:columnCount="2"
+    android:columnCount="4"
     android:rowCount="2"
-    tools:ignore="ContentDescription,UseCompoundDrawables"
+    android:alignmentMode="alignBounds"
     android:useDefaultMargins="true"
     android:paddingVertical="@dimen/widget_margin"
     android:paddingHorizontal="@dimen/widget_margin">
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:padding="@dimen/widget_margin"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/text1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Coffee past 12" />
-
-
-        <ImageView
-            android:id="@+id/check1"
-            android:layout_width="wrap_content"
-            android:src="@drawable/checkbox"
-            android:paddingTop="@dimen/checkbox_spacing"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:padding="@dimen/widget_margin"
-        android:orientation="vertical"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/text2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Alcohol" />
-
-
-        <ImageView
-            android:id="@+id/check2"
-            android:src="@drawable/checkbox"
-            android:paddingTop="@dimen/checkbox_spacing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:orientation="vertical"
-        android:padding="@dimen/widget_margin"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/text3"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Weed" />
-
-
-        <ImageView
-            android:id="@+id/check3"
-            android:src="@drawable/checkbox"
-            android:paddingTop="@dimen/checkbox_spacing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="@dimen/widget_margin"
-        android:layout_columnWeight="1"
-        android:layout_rowWeight="1"
-        android:gravity="center">
-
-        <TextView
-            android:id="@+id/text4"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Slept well last night" />
-
-        <ImageView
-            android:id="@+id/check4"
-            android:src="@drawable/checkbox"
-            android:paddingTop="@dimen/checkbox_spacing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-    </LinearLayout>
 
 </GridLayout>
