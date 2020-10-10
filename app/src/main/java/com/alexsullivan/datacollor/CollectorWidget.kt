@@ -8,6 +8,11 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.*
 
 private val states = mutableMapOf<Trackable, Boolean>().apply {
     for (trackable in Trackable.values()) {
@@ -44,6 +49,24 @@ class CollectorWidget : AppWidgetProvider() {
             states[trackable] = !states.getValue(trackable)
             val ids: IntArray = AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, CollectorWidget::class.java))
             onUpdate(context, AppWidgetManager.getInstance(context), ids)
+
+            val calendar: Calendar = GregorianCalendar()
+            calendar[Calendar.HOUR_OF_DAY] = 0
+            calendar[Calendar.MINUTE] = 0
+            calendar[Calendar.SECOND] = 0
+            calendar[Calendar.MILLISECOND] = 0
+            val date = calendar.time
+            val trackableEntity = TrackableEntity(trackable, states.getValue(trackable), date)
+
+            GlobalScope.launch {
+                withContext(Dispatchers.IO) {
+                    TrackableEntityDatabase.getDatabase(context).trackableEntityDao()
+                        .saveEntity(trackableEntity)
+                    val entities = TrackableEntityDatabase.getDatabase(context).trackableEntityDao()
+                        .getTrackableEntities()
+                    Log.d("entities", "Entities: $entities")
+                }
+            }
         }
     }
 

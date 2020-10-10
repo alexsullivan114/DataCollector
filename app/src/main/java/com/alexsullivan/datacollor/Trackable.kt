@@ -1,11 +1,11 @@
 package com.alexsullivan.datacollor
 
-enum class Trackable(val title: String) {
-    COFFEE_PAST_12("Coffee past 12"),
-    ALCOHOL("Alcohol"),
-    WEED("Weed"),
-    SLEPT_WELL("Slept well"),
-    WOKE_UP_RESTED("Woke up rested"),
-    EXERCISE("Exercise"),
-    MEDITATE("Meditate")
+enum class Trackable(val id: Int, val title: String) {
+    COFFEE_PAST_12(1, "Coffee past 12"),
+    ALCOHOL(2, "Alcohol"),
+    WEED(3, "Weed"),
+    SLEPT_WELL(4, "Slept well"),
+    WOKE_UP_RESTED(5, "Woke up rested"),
+    EXERCISE(6, "Exercise"),
+    MEDITATE(7, "Meditate")
 }
