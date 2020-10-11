@@ -7,5 +7,7 @@ enum class Trackable(val id: Int, val title: String) {
     SLEPT_WELL(4, "Slept well"),
     WOKE_UP_RESTED(5, "Woke up rested"),
     EXERCISE(6, "Exercise"),
-    MEDITATE(7, "Meditate")
+    MEDITATE(7, "Meditate"),
+    MORNING_TEETH(8, "Morning brush"),
+    EVENING_TEETH(9, "Evening brush")
 }
