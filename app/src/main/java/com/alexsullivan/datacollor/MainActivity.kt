@@ -15,14 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.*
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
 
 class MainActivity : AppCompatActivity() {
 
@@ -39,13 +40,19 @@ class MainActivity : AppCompatActivity() {
         registerForActivityResult(RequestPermission()) { _: Boolean ->
 
         }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        setContent {
+            TrackableList()
+        }
+
         lifecycleScope.launch {
-            setContent {
-                TrackableList()
-            }
+            viewModel.triggerUpdateWidgetFlow
+                .collect {
+                    refreshWidget()
+                }
         }
     }
 
@@ -92,5 +99,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun export() {
         lifecycleScope.launchWhenCreated { ExportUtil(this@MainActivity).export() }
+    }
+
+    private fun refreshWidget() {
+        val intent = Intent(this@MainActivity, CollectorWidget::class.java)
+        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        val ids: IntArray = AppWidgetManager.getInstance(application)
+            .getAppWidgetIds(ComponentName(application, CollectorWidget::class.java))
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        sendBroadcast(intent)
     }
 }
