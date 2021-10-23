@@ -38,8 +38,6 @@ class MainActivity : AppCompatActivity() {
             val enabledTrackables = manager.getEnabledTrackables()
             val allTrackables = manager.getAllTrackables()
             val enabledTrackableIds = enabledTrackables.map { it.id }
-            val allEnabledTrackables = manager.getAllEnabledTrackables()
-            print(allEnabledTrackables)
             setContent {
                 LazyColumn(modifier = Modifier.fillMaxWidth()) {
                     allTrackables.forEach { trackable ->

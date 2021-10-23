@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.alexsullivan.datacollor.Converters
 
-@Database(entities = [TrackableEntity::class, Trackable::class, EnabledTrackable::class], version = 3, exportSchema = false)
+@Database(entities = [TrackableEntity::class, Trackable::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class TrackableEntityDatabase: RoomDatabase() {
     abstract fun trackableEntityDao(): TrackableDao

@@ -45,17 +45,9 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
     }
 
     suspend fun toggleTrackableEnabled(trackable: Trackable, enabled: Boolean) {
-        val enabledTrackable = EnabledTrackable(trackable.id)
         val dao = database.trackableEntityDao()
-        if (enabled) {
-            dao.saveEnabledTrackable(enabledTrackable)
-        } else {
-            dao.deleteEnabledTrackable(enabledTrackable)
-        }
-    }
-
-    suspend fun getAllEnabledTrackables(): List<EnabledTrackable> {
-        return database.trackableEntityDao().getAllEnabledTrackables()
+        val updatedTrackable = trackable.copy(enabled = enabled)
+        dao.saveTrackable(updatedTrackable)
     }
 
     private fun midnight(): Date {

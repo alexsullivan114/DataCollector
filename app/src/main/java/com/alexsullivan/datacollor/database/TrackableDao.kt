@@ -17,17 +17,8 @@ interface TrackableDao {
     @Query("DELETE FROM trackable_entity_table")
     suspend fun nuke()
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveEnabledTrackable(enabledTrackable: EnabledTrackable)
-
-    @Delete
-    suspend fun deleteEnabledTrackable(enabledTrackable: EnabledTrackable)
-
-    @Query("SELECT * FROM enabled_trackable_table INNER JOIN trackable_table ON trackable_table.id = enabled_trackable_table.id")
+    @Query("SELECT * FROM trackable_table where enabled = 1")
     suspend fun getEnabledTrackables(): List<Trackable>
-
-    @Query("SELECT * FROM enabled_trackable_table")
-    suspend fun getAllEnabledTrackables(): List<EnabledTrackable>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveTrackable(trackable: Trackable)
