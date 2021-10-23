@@ -1,6 +1,7 @@
 package com.alexsullivan.datacollor.database
 
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.util.*
 
@@ -41,7 +42,11 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
     }
 
     suspend fun getAllTrackables(): List<Trackable> {
-        return database.trackableEntityDao().getAllTrackables()
+        return database.trackableEntityDao().getTrackables()
+    }
+
+    fun getTrackablesFlow(): Flow<List<Trackable>> {
+        return database.trackableEntityDao().getTrackablesFlow()
     }
 
     suspend fun toggleTrackableEnabled(trackable: Trackable, enabled: Boolean) {

@@ -1,6 +1,7 @@
 package com.alexsullivan.datacollor.database
 
 import androidx.room.*
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
@@ -27,7 +28,10 @@ interface TrackableDao {
     suspend fun deleteTrackable(trackable: Trackable)
 
     @Query("SELECT * FROM trackable_table")
-    suspend fun getAllTrackables(): List<Trackable>
+    suspend fun getTrackables(): List<Trackable>
+
+    @Query("SELECT * FROM trackable_table")
+    fun getTrackablesFlow(): Flow<List<Trackable>>
 
     @Query("SELECT * FROM trackable_table WHERE id = :id")
     suspend fun getTrackableById(id: Int): Trackable
