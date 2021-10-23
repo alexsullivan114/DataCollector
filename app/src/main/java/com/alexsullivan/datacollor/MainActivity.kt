@@ -7,13 +7,12 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Dispatchers
@@ -33,13 +32,26 @@ class MainActivity : AppCompatActivity() {
         requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
         setContent {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Button(onClick = { export() }) {
-                    Text("Export")
+            LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                Trackable.values().forEach { trackable ->
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(trackable.title)
+                            Checkbox(checked = false, onCheckedChange = {})
+                        }
+                        Divider()
+                    }
+                }
+                item {
+                    Button(modifier = Modifier.padding(16.dp).fillMaxWidth(), onClick = { export() }) {
+                        Text("Export")
+                    }
                 }
             }
         }
