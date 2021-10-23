@@ -27,8 +27,11 @@ abstract class TrackableEntityDatabase: RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     TrackableEntityDatabase::class.java,
-                    "word_database"
-                ).fallbackToDestructiveMigration().build()
+                    "sqlite.db"
+                )
+                    .createFromAsset("sqlite.db")
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 return instance
             }

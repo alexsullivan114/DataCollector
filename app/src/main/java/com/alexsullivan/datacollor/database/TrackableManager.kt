@@ -11,7 +11,6 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
     suspend fun init() {
         withContext(Dispatchers.IO) {
             val dao = database.trackableEntityDao()
-            insertDefaultTrackables()
             val enabledTrackables = dao.getEnabledTrackables()
             enabledTrackables.forEach { state[it] = false }
             val trackableEntities = dao.getTrackableEntities(midnight())
@@ -66,23 +65,5 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
         calendar[Calendar.SECOND] = 0
         calendar[Calendar.MILLISECOND] = 0
         return calendar.time
-    }
-
-    private suspend fun insertDefaultTrackables() {
-       val entityDao = database.trackableEntityDao()
-       val defaultTrackables = listOf(
-           Trackable(1, "Coffee past 12"),
-           Trackable(2, "Alcohol"),
-           Trackable(3, "Weed"),
-           Trackable(4, "Slept well"),
-           Trackable(5, "Woke up rested"),
-           Trackable(6, "Exercise"),
-           Trackable(7, "Meditate"),
-           Trackable(8, "Morning brush"),
-           Trackable(9, "Evening brush"),
-       )
-        defaultTrackables.forEach {
-            entityDao.saveTrackable(it)
-        }
     }
 }
