@@ -8,7 +8,7 @@ import androidx.activity.result.contract.ActivityResultContracts.RequestPermissi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
-import kotlinx.android.synthetic.main.activity_main.*
+import com.alexsullivan.datacollor.databinding.ActivityMainBinding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -23,10 +23,11 @@ class MainActivity : AppCompatActivity() {
         }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        val binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-        export.setOnClickListener {
+        binding.export.setOnClickListener {
             export()
         }
     }
