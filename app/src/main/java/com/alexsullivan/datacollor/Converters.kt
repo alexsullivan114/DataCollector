@@ -13,14 +13,4 @@ class Converters {
     fun dateToTimestamp(date: Date?): Long? {
         return date?.time
     }
-
-    @TypeConverter
-    fun fromEntityValue(value: Int?): Trackable? {
-        return Trackable.values().firstOrNull { it.id == value }
-    }
-
-    @TypeConverter
-    fun toEntityValue(trackable: Trackable?): Int? {
-        return trackable?.id
-    }
 }

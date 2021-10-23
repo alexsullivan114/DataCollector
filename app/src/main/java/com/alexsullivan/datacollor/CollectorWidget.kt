@@ -6,12 +6,12 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import android.widget.RemoteViews
-import kotlinx.coroutines.Dispatchers
+import com.alexsullivan.datacollor.database.Trackable
+import com.alexsullivan.datacollor.database.TrackableEntityDatabase
+import com.alexsullivan.datacollor.database.TrackableManager
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.*
 
 class CollectorWidget : AppWidgetProvider() {
@@ -43,12 +43,16 @@ class CollectorWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-        if (Trackable.values().map { it.name }.contains(intent.action)) {
-            val trackable = Trackable.values().first { it.name == intent.action }
-            GlobalScope.launch {
-                getTrackingManager(context).toggle(trackable)
-                val ids: IntArray = AppWidgetManager.getInstance(context).getAppWidgetIds(ComponentName(context, CollectorWidget::class.java))
-                onUpdate(context, AppWidgetManager.getInstance(context), ids)
+        GlobalScope.launch {
+            val enabledTrackables = getTrackingManager(context).getEnabledTrackables()
+            if (enabledTrackables.map { it.title}.contains(intent.action)) {
+                val trackable = enabledTrackables.first { it.title == intent.action }
+                GlobalScope.launch {
+                    getTrackingManager(context).toggle(trackable)
+                    val ids: IntArray = AppWidgetManager.getInstance(context)
+                        .getAppWidgetIds(ComponentName(context, CollectorWidget::class.java))
+                    onUpdate(context, AppWidgetManager.getInstance(context), ids)
+                }
             }
         }
     }
@@ -73,7 +77,7 @@ class CollectorWidget : AppWidgetProvider() {
                 remoteViews.addView(R.id.grid, item)
                 item.setTextViewText(R.id.text, entry.key.title)
                 item.setImageViewResource(R.id.check, checkbox)
-                item.setOnClickPendingIntent(R.id.check, getPendingSelfIntent(context, entry.key.name))
+                item.setOnClickPendingIntent(R.id.check, getPendingSelfIntent(context, entry.key.title))
             }
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, remoteViews)

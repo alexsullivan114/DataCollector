@@ -2,7 +2,6 @@ package com.alexsullivan.datacollor
 
 import android.Manifest
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
@@ -15,6 +14,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
+import com.alexsullivan.datacollor.database.Trackable
+import com.alexsullivan.datacollor.database.TrackableEntityDatabase
+import com.alexsullivan.datacollor.database.TrackableManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -30,27 +32,38 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-
-        setContent {
-            LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                Trackable.values().forEach { trackable ->
-                    item {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Text(trackable.title)
-                            Checkbox(checked = false, onCheckedChange = {})
+        val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this))
+        lifecycleScope.launch {
+            manager.init()
+            val enabledTrackables = manager.getEnabledTrackables()
+            val allTrackables = manager.getAllTrackables()
+            val enabledTrackableIds = enabledTrackables.map { it.id }
+            val allEnabledTrackables = manager.getAllEnabledTrackables()
+            print(allEnabledTrackables)
+            setContent {
+                LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                    allTrackables.forEach { trackable ->
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(trackable.title)
+                                val isChecked = enabledTrackableIds.contains(trackable.id)
+                                Checkbox(checked = isChecked, onCheckedChange = { checked ->
+                                    enableTrackable(trackable, checked)
+                                })
+                            }
+                            Divider()
                         }
-                        Divider()
                     }
-                }
-                item {
-                    Button(modifier = Modifier.padding(16.dp).fillMaxWidth(), onClick = { export() }) {
-                        Text("Export")
+                    item {
+                        Button(modifier = Modifier.padding(16.dp).fillMaxWidth(), onClick = { export() }) {
+                            Text("Export")
+                        }
                     }
                 }
             }
@@ -60,11 +73,11 @@ class MainActivity : AppCompatActivity() {
     private fun export() {
         lifecycleScope.launch {
             withContext(Dispatchers.IO) {
-                val trackables =
-                    TrackableEntityDatabase.getDatabase(this@MainActivity).trackableEntityDao()
-                        .getTrackableEntities()
+                val dao = TrackableEntityDatabase.getDatabase(this@MainActivity).trackableEntityDao()
+                val trackables = dao.getTrackableEntities()
                 val csvText = trackables.map {
-                    "${it.trackable.name}, ${it.executed}, ${it.date}"
+                    val trackable = dao.getTrackableById(it.trackableId)
+                    "${trackable.title}, ${it.executed}, ${it.date}"
                 }.fold("") { acc, entity ->
                    acc + entity + "\n"
                 }
@@ -100,6 +113,13 @@ class MainActivity : AppCompatActivity() {
                     startActivity(Intent.createChooser(sharingIntent, "Do it to it"))
                 }
             }
+        }
+    }
+
+    private fun enableTrackable(trackable: Trackable, checked: Boolean) {
+        val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this))
+        lifecycleScope.launch {
+            manager.toggleTrackableEnabled(trackable, checked)
         }
     }
 }
