@@ -1,93 +1,112 @@
 package com.alexsullivan.datacollor
 
 import android.Manifest
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.Button
-import androidx.compose.material.Text
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.core.content.FileProvider
-import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.Dispatchers
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.*
+import com.alexsullivan.datacollor.database.Trackable
+import com.alexsullivan.datacollor.database.TrackableEntityDatabase
+import com.alexsullivan.datacollor.database.TrackableManager
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import java.io.File
-import java.io.FileWriter
-
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
 
 class MainActivity : AppCompatActivity() {
-    private val requestPermissionLauncher =
-        registerForActivityResult(RequestPermission()) { _: Boolean ->
 
-        }
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
-
-        setContent {
-            Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Button(onClick = { export() }) {
-                    Text("Export")
-                }
+    private val viewModel: MainViewModel by viewModels {
+        object: ViewModelProvider.Factory {
+            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+                val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this@MainActivity))
+                return MainViewModel(manager) as T
             }
         }
     }
 
-    private fun export() {
+    private val requestPermissionLauncher =
+        registerForActivityResult(RequestPermission()) { _: Boolean ->
+
+        }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        setContent {
+            TrackableList()
+        }
+
         lifecycleScope.launch {
-            withContext(Dispatchers.IO) {
-                val trackables =
-                    TrackableEntityDatabase.getDatabase(this@MainActivity).trackableEntityDao()
-                        .getTrackableEntities()
-                val csvText = trackables.map {
-                    "${it.trackable.name}, ${it.executed}, ${it.date}"
-                }.fold("") { acc, entity ->
-                   acc + entity + "\n"
+            viewModel.triggerUpdateWidgetFlow
+                .collect {
+                    refreshWidget()
                 }
+        }
+    }
 
-                val dir = File(filesDir, "csvs")
-                if (!dir.exists()) {
-                    dir.mkdir()
-                }
-
-
-                var file: File? = null
-                try {
-                    file = File(dir, "export.csv")
-                    val writer = FileWriter(file)
-                    writer.append(csvText)
-                    writer.flush()
-                    writer.close()
-                } catch (e: Exception) {
-
-                }
-
-                if (file != null) {
-                    val uri = FileProvider.getUriForFile(
-                        this@MainActivity,
-                        BuildConfig.APPLICATION_ID + ".provider",
-                        file
-                    )
-                    val sharingIntent = Intent(Intent.ACTION_SEND)
-                    sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                    sharingIntent.action = Intent.ACTION_SEND
-                    sharingIntent.type = "text/csv"
-                    sharingIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                    startActivity(Intent.createChooser(sharingIntent, "Do it to it"))
+    @Composable
+    fun TrackableList(modifier: Modifier = Modifier) {
+        val trackables by viewModel.itemsFlow.collectAsState()
+        LazyColumn(modifier = modifier.fillMaxWidth()) {
+            trackables.forEach { trackable ->
+                item {
+                    TrackableItem(trackable)
                 }
             }
+            item {
+                ExportButton()
+            }
         }
+    }
+
+    @Composable
+    fun TrackableItem(trackable: Trackable, modifier: Modifier = Modifier) {
+        Row(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(trackable.title)
+            Checkbox(checked = trackable.enabled, onCheckedChange = { checked ->
+                viewModel.trackableToggled(trackable, checked)
+            })
+        }
+        Divider()
+    }
+
+    @Composable
+    fun ExportButton(modifier: Modifier = Modifier) {
+        Button(modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth(), onClick = { export() }) {
+            Text("Export")
+        }
+    }
+
+    private fun export() {
+        lifecycleScope.launchWhenCreated { ExportUtil(this@MainActivity).export() }
+    }
+
+    private fun refreshWidget() {
+        val intent = Intent(this@MainActivity, CollectorWidget::class.java)
+        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
+        val ids: IntArray = AppWidgetManager.getInstance(application)
+            .getAppWidgetIds(ComponentName(application, CollectorWidget::class.java))
+        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+        sendBroadcast(intent)
     }
 }

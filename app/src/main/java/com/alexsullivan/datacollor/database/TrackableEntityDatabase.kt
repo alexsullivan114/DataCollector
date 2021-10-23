@@ -1,17 +1,16 @@
-package com.alexsullivan.datacollor
+package com.alexsullivan.datacollor.database
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
+import com.alexsullivan.datacollor.Converters
 
-@Database(entities = [TrackableEntity::class], version = 2, exportSchema = false)
+@Database(entities = [TrackableEntity::class, Trackable::class], version = 3, exportSchema = false)
 @TypeConverters(Converters::class)
 abstract class TrackableEntityDatabase: RoomDatabase() {
-    abstract fun trackableEntityDao(): TrackableEntityDao
+    abstract fun trackableEntityDao(): TrackableDao
 
     companion object {
         // Singleton prevents multiple instances of database opening at the
@@ -28,8 +27,11 @@ abstract class TrackableEntityDatabase: RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     TrackableEntityDatabase::class.java,
-                    "word_database"
-                ).fallbackToDestructiveMigration().build()
+                    "sqlite.db"
+                )
+                    .createFromAsset("sqlite.db")
+                    .fallbackToDestructiveMigration()
+                    .build()
                 INSTANCE = instance
                 return instance
             }
