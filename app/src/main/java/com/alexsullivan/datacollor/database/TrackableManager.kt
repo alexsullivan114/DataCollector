@@ -45,6 +45,10 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
         return database.trackableEntityDao().getTrackables()
     }
 
+    suspend fun addTrackable(trackable: Trackable) {
+        database.trackableEntityDao().saveTrackable(trackable)
+    }
+
     fun getTrackablesFlow(): Flow<List<Trackable>> {
         return database.trackableEntityDao().getTrackablesFlow()
     }

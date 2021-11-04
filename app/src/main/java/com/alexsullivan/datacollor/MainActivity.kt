@@ -9,9 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -24,6 +21,11 @@ import kotlinx.coroutines.launch
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.runtime.*
+import androidx.compose.ui.text.input.KeyboardCapitalization
 
 class MainActivity : AppCompatActivity() {
 
@@ -58,17 +60,49 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     fun TrackableList(modifier: Modifier = Modifier) {
+        var showDialog by remember { mutableStateOf(false) }
         val trackables by viewModel.itemsFlow.collectAsState()
-        LazyColumn(modifier = modifier.fillMaxWidth()) {
-            trackables.forEach { trackable ->
+        Scaffold(
+            floatingActionButton = { FloatingActionButton(onClick = { showDialog = true }) {
+                Icon(Icons.Filled.Add, "Add")
+            }}
+        ) {
+            LazyColumn(modifier = modifier.fillMaxWidth()) {
+                trackables.forEach { trackable ->
+                    item {
+                        TrackableItem(trackable)
+                    }
+                }
                 item {
-                    TrackableItem(trackable)
+                    ExportButton()
                 }
             }
-            item {
-                ExportButton()
+            if (showDialog) {
+               AddItemDialog(
+                   onDismiss = { showDialog = false },
+                   onDone = {
+                       showDialog = false
+                       viewModel.trackableAdded(it)
+                   }
+               )
             }
         }
+    }
+
+    @Composable
+    fun AddItemDialog(onDismiss: () -> Unit, onDone: (String) -> Unit) {
+        var text by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = onDismiss,
+            title = { Text("Add item to track") },
+            text = {
+                OutlinedTextField(
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    value = text,
+                    onValueChange = { text = it })
+            },
+            confirmButton = { TextButton(onClick = { onDone(text) }) { Text("Ok") } },
+        )
     }
 
     @Composable

@@ -19,6 +19,8 @@ class MainViewModel(
     init {
         viewModelScope.launch {
             trackableManager.init()
+            val trackables = trackableManager.getAllTrackables()
+            print(trackables)
             trackableManager.getTrackablesFlow()
                 .distinctUntilChanged()
                 .collect {
@@ -31,6 +33,13 @@ class MainViewModel(
     fun trackableToggled(trackable: Trackable, checked: Boolean) {
         viewModelScope.launch {
             trackableManager.toggleTrackableEnabled(trackable, checked)
+        }
+    }
+
+    fun trackableAdded(title: String) {
+        viewModelScope.launch {
+            val trackable = Trackable(0, title, true)
+            trackableManager.addTrackable(trackable)
         }
     }
 }
