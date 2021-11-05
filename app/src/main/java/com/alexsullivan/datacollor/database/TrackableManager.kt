@@ -54,6 +54,8 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
 
     suspend fun deleteTrackable(trackable: Trackable) {
         // TODO: I think we need to remove it from the state map as well...
+        // UPDATE: I think since init gets called so much the state map is constantly rebuilt so
+        // we're all right.
         database.trackableEntityDao().deleteTrackable(trackable)
     }
 

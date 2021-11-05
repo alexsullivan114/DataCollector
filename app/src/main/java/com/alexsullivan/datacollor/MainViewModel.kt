@@ -19,7 +19,6 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
-            println("We be initing from view model")
             trackableManager.init()
             trackableManager.getTrackablesFlow()
                 .distinctUntilChanged()
@@ -37,7 +36,6 @@ class MainViewModel(
     }
 
     fun trackableAdded(title: String) {
-        println("Added")
         viewModelScope.launch {
             val uuid = UUID.randomUUID().toString()
             val trackable = Trackable(uuid, title, true)
@@ -46,7 +44,6 @@ class MainViewModel(
     }
 
     fun trackableDeleted(trackable: Trackable) {
-        println("Deleted")
         viewModelScope.launch {
             trackableManager.deleteTrackable(trackable)
             trackableManager.deleteTrackableEntities(trackable.id)
