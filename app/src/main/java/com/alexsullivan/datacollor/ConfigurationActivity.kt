@@ -1,6 +1,5 @@
 package com.alexsullivan.datacollor
 
-import android.Manifest
 import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -65,49 +64,55 @@ class ConfigurationActivity : AppCompatActivity() {
     fun TrackableList(modifier: Modifier = Modifier) {
         var showDialog by remember { mutableStateOf(false) }
         val trackables by viewModel.itemsFlow.collectAsState()
-        Scaffold(
-            floatingActionButton = {
-                FloatingActionButton(onClick = { showDialog = true }) {
-                    Icon(Icons.Filled.Add, "Add")
+        AppTheme {
+            Scaffold(
+                floatingActionButton = {
+                    FloatingActionButton(onClick = { showDialog = true }) {
+                        Icon(Icons.Filled.Add, "Add")
+                    }
                 }
-            }
-        ) {
-            LazyColumn(modifier = modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                item {
-                    Text(
-                        text = "Toggle to add tracking to the widget",
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(16.dp)
+            ) {
+                LazyColumn(
+                    modifier = modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    item {
+                        Text(
+                            text = "Toggle to add tracking to the widget",
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                    trackables.sortedBy { it.title }.forEach { trackable ->
+                        item(key = trackable.id) {
+                            val dismissState = rememberDismissState()
+                            val isDismissed =
+                                dismissState.isDismissed(DismissDirection.EndToStart) ||
+                                        dismissState.isDismissed(DismissDirection.StartToEnd)
+                            if (isDismissed) {
+                                viewModel.trackableDeleted(trackable)
+                            }
+                            SwipeToDismiss(
+                                state = dismissState,
+                                background = { Box(modifier = Modifier.background(Color.Red)) }) {
+                                TrackableItem(trackable)
+                            }
+                        }
+                    }
+                    item {
+                        DoneButton()
+                    }
+                }
+                if (showDialog) {
+                    AddItemDialog(
+                        onDismiss = { showDialog = false },
+                        onDone = {
+                            showDialog = false
+                            viewModel.trackableAdded(it)
+                        }
                     )
                 }
-                trackables.sortedBy { it.title }.forEach { trackable ->
-                    item(key = trackable.id) {
-                        val dismissState = rememberDismissState()
-                        val isDismissed = dismissState.isDismissed(DismissDirection.EndToStart) ||
-                                dismissState.isDismissed(DismissDirection.StartToEnd)
-                        if (isDismissed) {
-                            viewModel.trackableDeleted(trackable)
-                        }
-                        SwipeToDismiss(
-                            state = dismissState,
-                            background = { Box(modifier = Modifier.background(Color.Red)) }) {
-                            TrackableItem(trackable)
-                        }
-                    }
-                }
-                item {
-                    DoneButton()
-                }
-            }
-            if (showDialog) {
-                AddItemDialog(
-                    onDismiss = { showDialog = false },
-                    onDone = {
-                        showDialog = false
-                        viewModel.trackableAdded(it)
-                    }
-                )
             }
         }
     }
