@@ -15,6 +15,9 @@ interface TrackableDao {
     @Query("SELECT * FROM trackable_entity_table WHERE date = :date")
     suspend fun getTrackableEntities(date: Date): List<TrackableEntity>
 
+    @Query("DELETE FROM trackable_entity_table WHERE trackableId = :id")
+    suspend fun deleteTrackableEntities(id: String)
+
     @Query("DELETE FROM trackable_entity_table")
     suspend fun nuke()
 
@@ -34,5 +37,5 @@ interface TrackableDao {
     fun getTrackablesFlow(): Flow<List<Trackable>>
 
     @Query("SELECT * FROM trackable_table WHERE id = :id")
-    suspend fun getTrackableById(id: Int): Trackable
+    suspend fun getTrackableById(id: String): Trackable?
 }

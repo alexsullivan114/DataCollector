@@ -15,7 +15,7 @@ class ExportUtil(private val activity: Activity) {
             val dao = TrackableEntityDatabase.getDatabase(activity).trackableEntityDao()
             val trackables = dao.getTrackableEntities()
             val csvText = trackables.map {
-                val trackable = dao.getTrackableById(it.trackableId)
+                val trackable = dao.getTrackableById(it.trackableId)!!
                 "${trackable.title}, ${it.executed}, ${it.date}"
             }.fold("") { acc, entity ->
                 acc + entity + "\n"

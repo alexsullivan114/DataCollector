@@ -87,6 +87,9 @@ class CollectorWidget : AppWidgetProvider() {
     private suspend fun getTrackingManager(context: Context): TrackableManager {
         if (trackableManager == null) {
             trackableManager = TrackableManager(TrackableEntityDatabase.getDatabase(context))
+            println("We be initing from collector widget: $this")
+            // TODO: This gets called a lot, and I _think_ that's the only reason deleting trackables
+            // is reflected in the actual widget. Maybe that's ok but not sure.
             trackableManager!!.init()
         }
         return trackableManager!!

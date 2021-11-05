@@ -21,12 +21,15 @@ import kotlinx.coroutines.launch
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardCapitalization
 
+@ExperimentalMaterialApi
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels {
@@ -63,14 +66,26 @@ class MainActivity : AppCompatActivity() {
         var showDialog by remember { mutableStateOf(false) }
         val trackables by viewModel.itemsFlow.collectAsState()
         Scaffold(
-            floatingActionButton = { FloatingActionButton(onClick = { showDialog = true }) {
-                Icon(Icons.Filled.Add, "Add")
-            }}
+            floatingActionButton = {
+                FloatingActionButton(onClick = { showDialog = true }) {
+                    Icon(Icons.Filled.Add, "Add")
+                }
+            }
         ) {
             LazyColumn(modifier = modifier.fillMaxWidth()) {
-                trackables.forEach { trackable ->
-                    item {
-                        TrackableItem(trackable)
+                trackables.sortedBy { it.title }.forEach { trackable ->
+                    item(key = trackable.id) {
+                        val dismissState = rememberDismissState()
+                        val isDismissed = dismissState.isDismissed(DismissDirection.EndToStart) ||
+                                dismissState.isDismissed(DismissDirection.StartToEnd)
+                        if (isDismissed) {
+                            viewModel.trackableDeleted(trackable)
+                        }
+                        SwipeToDismiss(
+                            state = dismissState,
+                            background = { Box(modifier = Modifier.background(Color.Red)) }) {
+                            TrackableItem(trackable)
+                        }
                     }
                 }
                 item {
@@ -78,13 +93,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             if (showDialog) {
-               AddItemDialog(
-                   onDismiss = { showDialog = false },
-                   onDone = {
-                       showDialog = false
-                       viewModel.trackableAdded(it)
-                   }
-               )
+                AddItemDialog(
+                    onDismiss = { showDialog = false },
+                    onDone = {
+                        showDialog = false
+                        viewModel.trackableAdded(it)
+                    }
+                )
             }
         }
     }
@@ -97,7 +112,7 @@ class MainActivity : AppCompatActivity() {
             title = { Text("Add item to track") },
             text = {
                 OutlinedTextField(
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
                     value = text,
                     onValueChange = { text = it })
             },

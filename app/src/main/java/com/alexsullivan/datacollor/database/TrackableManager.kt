@@ -6,16 +6,23 @@ import kotlinx.coroutines.withContext
 import java.util.*
 
 class TrackableManager(private val database: TrackableEntityDatabase) {
+    // TODO: Why do we need state? Can't we just reference the database?
     val state = mutableMapOf<Trackable, Boolean>()
     private var operatingDate: Date = midnight()
 
     suspend fun init() {
         withContext(Dispatchers.IO) {
+            println("We be initing")
             val dao = database.trackableEntityDao()
             val enabledTrackables = dao.getEnabledTrackables()
             enabledTrackables.forEach { state[it] = false }
             val trackableEntities = dao.getTrackableEntities(midnight())
-            trackableEntities.forEach { state[dao.getTrackableById(it.trackableId)] = it.executed }
+            trackableEntities.forEach {
+                val trackable = dao.getTrackableById(it.trackableId)
+                if (trackable != null) {
+                    state[trackable] = it.executed
+                }
+            }
         }
     }
 
@@ -41,12 +48,17 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
         return database.trackableEntityDao().getEnabledTrackables()
     }
 
-    suspend fun getAllTrackables(): List<Trackable> {
-        return database.trackableEntityDao().getTrackables()
-    }
-
     suspend fun addTrackable(trackable: Trackable) {
         database.trackableEntityDao().saveTrackable(trackable)
+    }
+
+    suspend fun deleteTrackable(trackable: Trackable) {
+        // TODO: I think we need to remove it from the state map as well...
+        database.trackableEntityDao().deleteTrackable(trackable)
+    }
+
+    suspend fun deleteTrackableEntities(id: String) {
+        database.trackableEntityDao().deleteTrackableEntities(id)
     }
 
     fun getTrackablesFlow(): Flow<List<Trackable>> {

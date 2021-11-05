@@ -7,6 +7,7 @@ import com.alexsullivan.datacollor.database.TrackableManager
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 
 class MainViewModel(
     private val trackableManager: TrackableManager
@@ -18,9 +19,8 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
+            println("We be initing from view model")
             trackableManager.init()
-            val trackables = trackableManager.getAllTrackables()
-            print(trackables)
             trackableManager.getTrackablesFlow()
                 .distinctUntilChanged()
                 .collect {
@@ -37,9 +37,19 @@ class MainViewModel(
     }
 
     fun trackableAdded(title: String) {
+        println("Added")
         viewModelScope.launch {
-            val trackable = Trackable(0, title, true)
+            val uuid = UUID.randomUUID().toString()
+            val trackable = Trackable(uuid, title, true)
             trackableManager.addTrackable(trackable)
+        }
+    }
+
+    fun trackableDeleted(trackable: Trackable) {
+        println("Deleted")
+        viewModelScope.launch {
+            trackableManager.deleteTrackable(trackable)
+            trackableManager.deleteTrackableEntities(trackable.id)
         }
     }
 }
