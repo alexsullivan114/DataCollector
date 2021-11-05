@@ -2,57 +2,53 @@ package com.alexsullivan.datacollor
 
 import android.Manifest
 import android.app.Activity
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.*
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
-import android.content.Intent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.unit.sp
 
 @ExperimentalMaterialApi
-class MainActivity : AppCompatActivity() {
-
-    private val viewModel: MainViewModel by viewModels {
+class ConfigurationActivity : AppCompatActivity() {
+    private val viewModel: ConfigurationViewModel by viewModels {
         object: ViewModelProvider.Factory {
             override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this@MainActivity))
+                val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this@ConfigurationActivity))
                 val updateUseCase = UpdateTrackablesUseCase(manager)
-                return MainViewModel(manager, updateUseCase) as T
+                return ConfigurationViewModel(manager, updateUseCase) as T
             }
         }
     }
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(RequestPermission()) { _: Boolean ->
-
-        }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         setContent {
             TrackableList()
         }
@@ -101,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
                 item {
-                    ExportButton()
+                    DoneButton()
                 }
             }
             if (showDialog) {
@@ -113,6 +109,24 @@ class MainActivity : AppCompatActivity() {
                     }
                 )
             }
+        }
+    }
+
+    @Composable
+    fun DoneButton(modifier: Modifier = Modifier) {
+        Button(modifier = modifier
+            .padding(16.dp)
+            .fillMaxWidth(), onClick = {
+            val appWidgetId = intent?.extras?.getInt(
+                AppWidgetManager.EXTRA_APPWIDGET_ID,
+                AppWidgetManager.INVALID_APPWIDGET_ID
+            ) ?: AppWidgetManager.INVALID_APPWIDGET_ID
+            val resultValue = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
+            setResult(Activity.RESULT_OK, resultValue)
+            refreshWidget()
+            finish()
+        }) {
+            Text("Done")
         }
     }
 
@@ -149,21 +163,8 @@ class MainActivity : AppCompatActivity() {
         Divider()
     }
 
-    @Composable
-    fun ExportButton(modifier: Modifier = Modifier) {
-        Button(modifier = modifier
-            .padding(16.dp)
-            .fillMaxWidth(), onClick = { export() }) {
-            Text("Export")
-        }
-    }
-
-    private fun export() {
-        lifecycleScope.launchWhenCreated { ExportUtil(this@MainActivity).export() }
-    }
-
     private fun refreshWidget() {
-        val intent = Intent(this@MainActivity, CollectorWidget::class.java)
+        val intent = Intent(this@ConfigurationActivity, CollectorWidget::class.java)
         intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
         val ids: IntArray = AppWidgetManager.getInstance(application)
             .getAppWidgetIds(ComponentName(application, CollectorWidget::class.java))

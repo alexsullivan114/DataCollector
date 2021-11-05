@@ -7,12 +7,11 @@ import com.alexsullivan.datacollor.database.TrackableManager
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.util.*
 
-class MainViewModel(
+class ConfigurationViewModel(
     private val trackableManager: TrackableManager,
     private val updateTrackablesUseCase: UpdateTrackablesUseCase
-): ViewModel() {
+) : ViewModel() {
     private val _itemsFlow = MutableStateFlow(emptyList<Trackable>())
     private val _triggerUpdateWidgetsFlow = Channel<Unit>()
     val itemsFlow = _itemsFlow.asStateFlow()

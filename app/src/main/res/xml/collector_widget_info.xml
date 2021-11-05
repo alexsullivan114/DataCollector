@@ -7,6 +7,7 @@
     android:minResizeHeight="40dp"
     android:minResizeWidth="40dp"
     android:previewImage="@drawable/preview"
+    android:configure="com.alexsullivan.datacollor.ConfigurationActivity"
     android:resizeMode="horizontal|vertical"
     android:updatePeriodMillis="10000"
     android:widgetCategory="home_screen" />
