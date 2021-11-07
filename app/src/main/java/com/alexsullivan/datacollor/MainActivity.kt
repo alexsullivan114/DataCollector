@@ -160,7 +160,8 @@ class MainActivity : AppCompatActivity() {
     fun ExportButton(modifier: Modifier = Modifier) {
         Button(modifier = modifier
             .padding(16.dp)
-            .fillMaxWidth(), onClick = { export() }) {
+            .fillMaxWidth(), onClick = this::export
+        ) {
             Text("Export")
         }
     }

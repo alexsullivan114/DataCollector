@@ -29,7 +29,7 @@ class ExportUtil(private val activity: Activity) {
 
             var file: File? = null
             try {
-                file = File(dir, "export.csv")
+                file = File(dir, "quantified_life.csv")
                 val writer = FileWriter(file)
                 writer.append(csvText)
                 writer.flush()
