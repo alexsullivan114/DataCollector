@@ -42,7 +42,6 @@ abstract class TrackableEntityDatabase: RoomDatabase() {
                             val initialTrackables = listOf(
                                 Trackable(UUID.randomUUID().toString(), "Coffee past 12", false),
                                 Trackable(UUID.randomUUID().toString(), "Alcohol", false),
-                                Trackable(UUID.randomUUID().toString(), "Weed", false),
                                 Trackable(UUID.randomUUID().toString(), "Slept well", false),
                                 Trackable(UUID.randomUUID().toString(), "Woke up rested", false),
                                 Trackable(UUID.randomUUID().toString(), "Exercise", false),
