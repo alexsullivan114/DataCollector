@@ -33,6 +33,8 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
             enabledTrackable.forEach { trackable ->
                 state[trackable] = false
             }
+            // TODO: At this point maybe we should save off all of these trackables so that by default
+            // we have a false event for each one.
         }
     }
 
@@ -50,6 +52,10 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
 
     suspend fun addTrackable(trackable: Trackable) {
         database.trackableEntityDao().saveTrackable(trackable)
+    }
+
+    suspend fun saveEntity(trackableEntity: TrackableEntity) {
+        database.trackableEntityDao().saveEntity(trackableEntity)
     }
 
     suspend fun deleteTrackable(trackable: Trackable) {

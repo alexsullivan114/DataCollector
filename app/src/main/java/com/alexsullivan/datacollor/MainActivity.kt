@@ -1,7 +1,6 @@
 package com.alexsullivan.datacollor
 
 import android.Manifest
-import android.app.Activity
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
@@ -21,7 +20,13 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
+import android.content.SharedPreferences
+import android.util.Log
+import android.widget.ProgressBar
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -31,6 +36,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.sp
+import androidx.work.*
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.Scopes
+import com.google.android.gms.common.api.Scope
+import com.google.api.client.extensions.android.http.AndroidHttp
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.InputStreamContent
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.drive.Drive
+import com.google.api.services.drive.DriveScopes
+import com.google.api.services.drive.model.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.ByteArrayInputStream
+import java.util.concurrent.TimeUnit
 
 @ExperimentalMaterialApi
 class MainActivity : AppCompatActivity() {
@@ -38,21 +60,33 @@ class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels {
         object: ViewModelProvider.Factory {
             override fun <T : ViewModel?> create(modelClass: Class<T>): T {
-                val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this@MainActivity))
+                val database = TrackableEntityDatabase.getDatabase(this@MainActivity)
+                val manager = TrackableManager(database)
                 val updateUseCase = UpdateTrackablesUseCase(manager)
-                return MainViewModel(manager, updateUseCase) as T
+                val backupUseCase = BackupTrackablesUseCase(database, this@MainActivity)
+                val prefs = QLPreferences(this@MainActivity)
+                return MainViewModel(manager, updateUseCase, backupUseCase, prefs) as T
             }
         }
     }
 
-    private val requestPermissionLauncher =
-        registerForActivityResult(RequestPermission()) { _: Boolean ->
-
+    private val googleSignInLauncher =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+            GoogleSignIn.getSignedInAccountFromIntent(it.data)
+                .addOnCompleteListener {
+                    viewModel.signedInToGoogle()
+                }
+                .addOnFailureListener {
+                    Toast.makeText(
+                        this,
+                        "Something went wrong while signing in to Google. Try again later.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        requestPermissionLauncher.launch(Manifest.permission.WRITE_EXTERNAL_STORAGE)
         setContent {
             TrackableList()
         }
@@ -63,6 +97,14 @@ class MainActivity : AppCompatActivity() {
                     refreshWidget()
                 }
         }
+        lifecycleScope.launch {
+            viewModel.triggerPeriodicWorkFlow
+                .collect {
+                    registerPeriodicUploadWorker()
+                }
+        }
+
+        signInToGoogle()
     }
 
     @Composable
@@ -177,5 +219,27 @@ class MainActivity : AppCompatActivity() {
             .getAppWidgetIds(ComponentName(application, CollectorWidget::class.java))
         intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
         sendBroadcast(intent)
+    }
+
+    private fun signInToGoogle() {
+        val signInOptions = GoogleSignInOptions
+            .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestEmail()
+            .requestProfile()
+            .requestScopes(Scope(DriveScopes.DRIVE_FILE))
+            .build()
+
+        val client = GoogleSignIn.getClient(this, signInOptions)
+        googleSignInLauncher.launch(client.signInIntent)
+    }
+
+    private fun registerPeriodicUploadWorker() {
+        val periodicWorkRequest = PeriodicWorkRequestBuilder<DriveUploadWorker>(
+            24,
+            TimeUnit.HOURS
+        ).setConstraints(
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        ).build()
+        WorkManager.getInstance(this@MainActivity).enqueueUniquePeriodicWork("UploadToDrive", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
     }
 }

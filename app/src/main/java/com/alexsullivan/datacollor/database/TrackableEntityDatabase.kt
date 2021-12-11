@@ -1,6 +1,7 @@
 package com.alexsullivan.datacollor.database
 
 import android.content.Context
+import android.util.Log
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
@@ -10,6 +11,7 @@ import com.alexsullivan.datacollor.Converters
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
 import java.util.*
 
 @Database(entities = [TrackableEntity::class, Trackable::class], version = 3, exportSchema = false)
