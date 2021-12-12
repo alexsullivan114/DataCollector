@@ -67,7 +67,7 @@ class ExportUtil(private val activity: Activity) {
                 sharingIntent.action = Intent.ACTION_SEND
                 sharingIntent.type = "text/csv"
                 sharingIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                activity.startActivity(Intent.createChooser(sharingIntent, "Do it to it"))
+                activity.startActivity(sharingIntent)
             }
         }
     }
