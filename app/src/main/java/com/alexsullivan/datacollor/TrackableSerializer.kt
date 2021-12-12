@@ -14,8 +14,12 @@ object TrackableSerializer {
         val groupedTrackables = trackableEntities.groupBy { it.date }.toSortedMap()
         val csvText = groupedTrackables.map { (date, entities) ->
             var entry = format.format(date)
-            entities.forEach { entity ->
-                val trackable = trackables.first { it.id == entity.trackableId }
+            val pairedEntities = entities.map { entity ->
+                val associatedTrackable = trackables.first { it.id == entity.trackableId }
+                entity to associatedTrackable
+            }
+            val sortedEntities = pairedEntities.sortedBy { it.second.title }
+            sortedEntities.forEach { (entity, trackable) ->
                 entry += ",${trackable.title},${entity.executed}"
             }
             entry

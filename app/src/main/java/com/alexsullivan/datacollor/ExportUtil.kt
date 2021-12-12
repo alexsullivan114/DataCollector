@@ -22,22 +22,12 @@ import java.text.SimpleDateFormat
 class ExportUtil(private val activity: Activity) {
 
     suspend fun export() {
-        val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
         withContext(Dispatchers.IO) {
             val dao = TrackableEntityDatabase.getDatabase(activity).trackableEntityDao()
             val trackableEntities = dao.getTrackableEntities()
             val trackables = dao.getTrackables()
             Log.d("Export", "Trackables: $trackables")
-            val groupedTrackables = trackableEntities.groupBy { it.date }.toSortedMap()
-            val csvText = groupedTrackables.map { (date, entities) ->
-                var entry = format.format(date)
-                entities.forEach { entity ->
-                    Log.d("Export", "Fetching trackable for id ${entity.trackableId}")
-                    val trackable = trackables.first { it.id == entity.trackableId }
-                    entry += ",${trackable.title},${entity.executed}"
-                }
-                entry
-            }.fold("") { acc, entity -> acc + entity + "\n" }
+            val csvText = TrackableSerializer.serialize(trackableEntities, trackables)
 
             val dir = File(activity.filesDir, "csvs")
             if (!dir.exists()) {
