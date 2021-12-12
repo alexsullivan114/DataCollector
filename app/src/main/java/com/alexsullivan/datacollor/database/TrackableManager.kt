@@ -59,10 +59,6 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
         return database.trackableEntityDao().getTrackableEntities(midnight())
     }
 
-    suspend fun getTrackableById(id: String): Trackable? {
-        return database.trackableEntityDao().getTrackableById(id)
-    }
-
     private fun midnight(): Date {
         val calendar: Calendar = GregorianCalendar()
         calendar[Calendar.HOUR_OF_DAY] = 0
