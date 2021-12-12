@@ -9,6 +9,9 @@ interface TrackableDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveEntity(entity: TrackableEntity)
 
+    @Query("SELECT * FROM trackable_entity_table WHERE date = :date AND trackableId = :id LIMIT 1")
+    suspend fun getTrackableEntity(date: Date, id: String): TrackableEntity
+
     @Query("SELECT * FROM trackable_entity_table")
     suspend fun getTrackableEntities(): List<TrackableEntity>
 

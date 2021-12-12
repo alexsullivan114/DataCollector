@@ -27,7 +27,6 @@ class MainViewModel(
 
     init {
         viewModelScope.launch {
-            trackableManager.init()
             trackableManager.getTrackablesFlow()
                 .distinctUntilChanged()
                 .collect {

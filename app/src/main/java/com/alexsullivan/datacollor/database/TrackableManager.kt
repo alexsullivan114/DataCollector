@@ -6,43 +6,22 @@ import kotlinx.coroutines.withContext
 import java.util.*
 
 class TrackableManager(private val database: TrackableEntityDatabase) {
-    // TODO: Why do we need state? Can't we just reference the database?
-    val state = mutableMapOf<Trackable, Boolean>()
-    private var operatingDate: Date = midnight()
-
-    suspend fun init() {
-        withContext(Dispatchers.IO) {
-            println("We be initing")
-            val dao = database.trackableEntityDao()
-            val enabledTrackables = dao.getEnabledTrackables()
-            enabledTrackables.forEach { state[it] = false }
-            val trackableEntities = dao.getTrackableEntities(midnight())
-            trackableEntities.forEach {
-                val trackable = dao.getTrackableById(it.trackableId)
-                if (trackable != null) {
-                    state[trackable] = it.executed
-                }
-            }
-        }
-    }
-
     suspend fun update() {
-        if (midnight() != operatingDate) {
-            state.clear()
-            val enabledTrackable = database.trackableEntityDao().getEnabledTrackables()
-            enabledTrackable.forEach { trackable ->
-                state[trackable] = false
+        val enabledTrackables = database.trackableEntityDao().getEnabledTrackables()
+        val trackableEntities = database.trackableEntityDao().getTrackableEntities(midnight())
+        enabledTrackables.forEach { trackable ->
+            if (!trackableEntities.any { it.trackableId ==  trackable.id}) {
+                val entity = TrackableEntity(trackable.id, false, midnight())
+                saveEntity(entity)
             }
-            // TODO: At this point maybe we should save off all of these trackables so that by default
-            // we have a false event for each one.
         }
     }
 
     suspend fun toggle(trackable: Trackable) {
-        state[trackable] = !state.getValue(trackable)
+        val entity = database.trackableEntityDao().getTrackableEntity(midnight(), trackable.id)
         withContext(Dispatchers.IO) {
-            val trackableEntity = TrackableEntity(trackable.id, state.getValue(trackable), midnight())
-            database.trackableEntityDao().saveEntity(trackableEntity)
+            val updatedEntity = entity.copy(executed = !entity.executed)
+            database.trackableEntityDao().saveEntity(updatedEntity)
         }
     }
 
@@ -59,9 +38,6 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
     }
 
     suspend fun deleteTrackable(trackable: Trackable) {
-        // TODO: I think we need to remove it from the state map as well...
-        // UPDATE: I think since init gets called so much the state map is constantly rebuilt so
-        // we're all right.
         database.trackableEntityDao().deleteTrackable(trackable)
     }
 
@@ -77,6 +53,14 @@ class TrackableManager(private val database: TrackableEntityDatabase) {
         val dao = database.trackableEntityDao()
         val updatedTrackable = trackable.copy(enabled = enabled)
         dao.saveTrackable(updatedTrackable)
+    }
+
+    suspend fun getTodaysTrackableEntities(): List<TrackableEntity> {
+        return database.trackableEntityDao().getTrackableEntities(midnight())
+    }
+
+    suspend fun getTrackableById(id: String): Trackable? {
+        return database.trackableEntityDao().getTrackableById(id)
     }
 
     private fun midnight(): Date {

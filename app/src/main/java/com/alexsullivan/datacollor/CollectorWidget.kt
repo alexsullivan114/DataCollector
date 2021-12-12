@@ -10,10 +10,12 @@ import android.widget.RemoteViews
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
+@DelicateCoroutinesApi
 class CollectorWidget : AppWidgetProvider() {
 
     private var trackableManager: TrackableManager? = null
@@ -71,26 +73,31 @@ class CollectorWidget : AppWidgetProvider() {
         GlobalScope.launch {
             val remoteViews = RemoteViews(context.packageName, R.layout.collector_widget)
             remoteViews.removeAllViews(R.id.grid)
-            for (entry in getTrackingManager(context).state) {
-                val checkbox = if (entry.value) R.drawable.ic_baseline_check_box_24 else R.drawable.ic_baseline_check_box_outline_blank_24
+            val trackables = getTrackingManager(context).getEnabledTrackables()
+            val trackableEntities = getTrackingManager(context).getTodaysTrackableEntities()
+            for (trackable in trackables) {
+                val associatedTrackableEntity =
+                    trackableEntities.firstOrNull { it.trackableId == trackable.id }
+                val executed = associatedTrackableEntity?.executed ?: false
+                val checkbox =
+                    if (executed) R.drawable.ic_baseline_check_box_24 else R.drawable.ic_baseline_check_box_outline_blank_24
                 val item = RemoteViews(context.packageName, R.layout.trackable_item)
                 remoteViews.addView(R.id.grid, item)
-                item.setTextViewText(R.id.text, entry.key.title)
+                item.setTextViewText(R.id.text, trackable.title)
                 item.setImageViewResource(R.id.check, checkbox)
-                item.setOnClickPendingIntent(R.id.check, getPendingSelfIntent(context, entry.key.title))
+                item.setOnClickPendingIntent(
+                    R.id.check,
+                    getPendingSelfIntent(context, trackable.title)
+                )
             }
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
         }
     }
 
-    private suspend fun getTrackingManager(context: Context): TrackableManager {
+    private fun getTrackingManager(context: Context): TrackableManager {
         if (trackableManager == null) {
             trackableManager = TrackableManager(TrackableEntityDatabase.getDatabase(context))
-            println("We be initing from collector widget: $this")
-            // TODO: This gets called a lot, and I _think_ that's the only reason deleting trackables
-            // is reflected in the actual widget. Maybe that's ok but not sure.
-            trackableManager!!.init()
         }
         return trackableManager!!
     }

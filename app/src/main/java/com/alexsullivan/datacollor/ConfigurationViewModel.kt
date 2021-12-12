@@ -19,7 +19,6 @@ class ConfigurationViewModel(
 
     init {
         viewModelScope.launch {
-            trackableManager.init()
             trackableManager.getTrackablesFlow()
                 .distinctUntilChanged()
                 .collect {
