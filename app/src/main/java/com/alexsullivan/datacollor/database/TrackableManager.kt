@@ -5,58 +5,97 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.util.*
 
-class TrackableManager(private val database: TrackableEntityDatabase) {
+class TrackableManager(database: TrackableEntityDatabase) {
+    private val booleanDao = database.trackableBooleanDao()
+    private val numberDao = database.trackableNumberDao()
+    private val trackableDao = database.trackableDao()
+
     suspend fun update() {
-        val enabledTrackables = database.trackableEntityDao().getEnabledTrackables()
-        val trackableEntities = database.trackableEntityDao().getTrackableEntities(midnight())
+        val enabledTrackables = trackableDao.getEnabled()
+        val booleanEntities = booleanDao.getEntities(midnight())
+        val numberEntities = numberDao.getEntities(midnight())
         enabledTrackables.forEach { trackable ->
-            if (!trackableEntities.any { it.trackableId ==  trackable.id}) {
-                val entity = TrackableEntity(trackable.id, false, midnight())
-                saveEntity(entity)
+            when (trackable.type) {
+                TrackableType.BOOLEAN -> {
+                    if (!booleanEntities.any { it.trackableId ==  trackable.id}) {
+                        val entity = BooleanTrackableEntity(trackable.id, false, midnight())
+                        saveEntity(TrackableEntity.Boolean(entity))
+                    }
+                }
+                TrackableType.NUMBER -> {
+                    if (!numberEntities.any { it.trackableId ==  trackable.id}) {
+                        val entity = NumberTrackableEntity(trackable.id, 0, midnight())
+                        saveEntity(TrackableEntity.Number(entity))
+                    }
+                }
             }
         }
     }
 
     suspend fun toggle(trackable: Trackable) {
-        val entity = database.trackableEntityDao().getTrackableEntity(midnight(), trackable.id)
+        val entity = booleanDao.getEntity(midnight(), trackable.id)
         withContext(Dispatchers.IO) {
             val updatedEntity = entity.copy(executed = !entity.executed)
-            database.trackableEntityDao().saveEntity(updatedEntity)
+            booleanDao.save(updatedEntity)
+        }
+    }
+
+    suspend fun updateCount(trackable: Trackable, increment: Boolean) {
+        val entity = numberDao.getEntity(midnight(), trackable.id)
+        withContext(Dispatchers.IO) {
+            val newCount = if (increment) entity.count + 1 else entity.count - 1
+            val updatedEntity = entity.copy(count = newCount)
+            numberDao.save(updatedEntity)
         }
     }
 
     suspend fun getEnabledTrackables(): List<Trackable> {
-        return database.trackableEntityDao().getEnabledTrackables()
+        return trackableDao.getEnabled()
+    }
+
+    suspend fun getTrackables(): List<Trackable> {
+        return trackableDao.getTrackables()
     }
 
     suspend fun addTrackable(trackable: Trackable) {
-        database.trackableEntityDao().saveTrackable(trackable)
+        trackableDao.saveTrackable(trackable)
     }
 
-    suspend fun saveEntity(trackableEntity: TrackableEntity) {
-        database.trackableEntityDao().saveEntity(trackableEntity)
+    suspend fun saveEntity(entity: TrackableEntity) {
+        when (entity) {
+            is TrackableEntity.Boolean -> booleanDao.save(entity.booleanEntity)
+            is TrackableEntity.Number -> numberDao.save(entity.numberEntity)
+        }
     }
 
     suspend fun deleteTrackable(trackable: Trackable) {
-        database.trackableEntityDao().deleteTrackable(trackable)
+        trackableDao.deleteTrackable(trackable)
     }
 
     suspend fun deleteTrackableEntities(id: String) {
-        database.trackableEntityDao().deleteTrackableEntities(id)
+        booleanDao.delete(id)
+        numberDao.delete(id)
     }
 
     fun getTrackablesFlow(): Flow<List<Trackable>> {
-        return database.trackableEntityDao().getTrackablesFlow()
+        return trackableDao.getTrackablesFlow()
     }
 
     suspend fun toggleTrackableEnabled(trackable: Trackable, enabled: Boolean) {
-        val dao = database.trackableEntityDao()
         val updatedTrackable = trackable.copy(enabled = enabled)
-        dao.saveTrackable(updatedTrackable)
+        trackableDao.saveTrackable(updatedTrackable)
+    }
+
+    suspend fun getTrackableEntities(): List<TrackableEntity> {
+        val booleanEntities = booleanDao.getEntities().map { TrackableEntity.Boolean(it) }
+        val numberEntities = numberDao.getEntities().map { TrackableEntity.Number(it) }
+        return booleanEntities + numberEntities
     }
 
     suspend fun getTodaysTrackableEntities(): List<TrackableEntity> {
-        return database.trackableEntityDao().getTrackableEntities(midnight())
+        val booleanEntities = booleanDao.getEntities(midnight()).map { TrackableEntity.Boolean(it) }
+        val numberEntities = numberDao.getEntities(midnight()).map { TrackableEntity.Number(it) }
+        return booleanEntities + numberEntities
     }
 
     private fun midnight(): Date {

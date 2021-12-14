@@ -1,8 +1,8 @@
 package com.alexsullivan.datacollor
 
 import android.annotation.SuppressLint
-import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.database.TrackableEntity
+import com.alexsullivan.datacollor.database.*
+import java.lang.NumberFormatException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -10,8 +10,8 @@ object TrackableSerializer {
     @SuppressLint("SimpleDateFormat")
     private val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
-    fun serialize(trackableEntities: List<TrackableEntity>, trackables: List<Trackable>): String {
-        val groupedTrackables = trackableEntities.groupBy { it.date }.toSortedMap()
+    fun serialize(entities: List<TrackableEntity>, trackables: List<Trackable>): String {
+        val groupedTrackables = entities.groupBy { it.date }.toSortedMap()
         val csvText = groupedTrackables.map { (date, entities) ->
             var entry = format.format(date)
             val pairedEntities = entities.map { entity ->
@@ -20,47 +20,60 @@ object TrackableSerializer {
             }
             val sortedEntities = pairedEntities.sortedBy { it.second.title }
             sortedEntities.forEach { (entity, trackable) ->
-                entry += ",${trackable.title},${entity.executed}"
+                val value = when (entity) {
+                    is TrackableEntity.Boolean -> entity.booleanEntity.executed.toString()
+                    is TrackableEntity.Number -> entity.numberEntity.count.toString()
+                }
+                entry += ",${trackable.title},${value}"
             }
             entry
         }.fold("") { acc, entity -> acc + entity + "\n" }
         return csvText
     }
 
-    data class CsvLine(val date: Date, val trackables: List<Pair<String, Boolean>>)
     fun deserialize(contents: String): Map<Trackable, List<TrackableEntity>> {
-        val csvLines = contents.trim().split("\n").map {
+        val trackableTitleMap = mutableMapOf<String, List<TrackableEntity>>()
+        contents.trim().split("\n").map {
             val csvs = it.split(",")
             // First should be the date
             val date = format.parse(csvs[0])!!
-            // Then pairs of Trackable -> boolean
+            // Then pairs of Trackable -> some type
             val trackablePairStrings = csvs.subList(1, csvs.size)
-            val trackablePairs = mutableListOf<Pair<String, Boolean>>()
             for (i in 0 until trackablePairStrings.lastIndex step 2) {
                 val trackableTitle = trackablePairStrings[i]
-                val toggled = trackablePairStrings[i + 1].toBooleanStrict()
-                trackablePairs.add(trackableTitle to toggled)
-            }
-            CsvLine(date, trackablePairs)
-        }
-        val trackableTitleMap = mutableMapOf<String, List<Pair<Date, Boolean>>>()
-        csvLines.forEach { csvLine ->
-            csvLine.trackables.forEach { (trackableTitle, enabled) ->
-                val pairList = trackableTitleMap.getOrPut(trackableTitle, { emptyList() })
-                val updatedList = pairList + (csvLine.date to enabled)
-                trackableTitleMap[trackableTitle] = updatedList
+                val data = trackablePairStrings[i + 1]
+                val entity = constructEntity(data, date)
+                val entities = trackableTitleMap[trackableTitle] ?: emptyList()
+                val updatedEntities = entities + entity
+                trackableTitleMap[trackableTitle] = updatedEntities
             }
         }
-
-        val trackableEntityMap: MutableMap<Trackable, List<TrackableEntity>> = mutableMapOf()
-        trackableTitleMap.forEach { (trackableTitle, entityList) ->
-            val trackable = Trackable(UUID.randomUUID().toString(), trackableTitle, true)
-            val entities = entityList.map { (date, toggled) ->
-                TrackableEntity(trackable.id, toggled, date)
+        val trackableMap = trackableTitleMap.mapKeys { (title, entries) ->
+            val type = when (entries[0]) {
+                is TrackableEntity.Boolean -> TrackableType.BOOLEAN
+                is TrackableEntity.Number -> TrackableType.NUMBER
             }
-            trackableEntityMap[trackable] = entities
+            Trackable(UUID.randomUUID().toString(), title, true, type)
         }
 
-        return trackableEntityMap
+        val returnMap = trackableMap.mapValues { (trackable, entites) ->
+            entites.map { entity ->
+                when (entity) {
+                    is TrackableEntity.Boolean -> TrackableEntity.Boolean(entity.booleanEntity.copy(trackableId = trackable.id))
+                    is TrackableEntity.Number -> TrackableEntity.Number(entity.numberEntity.copy(trackableId = trackable.id))
+                }
+            }
+        }
+        return returnMap
+    }
+
+    private fun constructEntity(data: String, date: Date): TrackableEntity {
+        return try {
+            val numberData = data.toInt()
+            return TrackableEntity.Number(NumberTrackableEntity("", numberData, date))
+        } catch (e: NumberFormatException) {
+            val booleanData = data.toBooleanStrict()
+            return TrackableEntity.Boolean(BooleanTrackableEntity("", booleanData, date))
+        }
     }
 }

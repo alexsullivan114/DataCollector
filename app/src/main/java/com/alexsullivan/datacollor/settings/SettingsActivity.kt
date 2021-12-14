@@ -28,7 +28,8 @@ class SettingsActivity : AppCompatActivity() {
         object: ViewModelProvider.Factory {
             override fun <T : ViewModel?> create(modelClass: Class<T>): T {
                 val database = TrackableEntityDatabase.getDatabase(this@SettingsActivity)
-                val backupUseCase = BackupTrackablesUseCase(database, this@SettingsActivity)
+                val manager = TrackableManager(database)
+                val backupUseCase = BackupTrackablesUseCase(manager, this@SettingsActivity)
                 val prefs = QLPreferences(this@SettingsActivity)
                 return SettingsViewModel(backupUseCase, prefs) as T
             }

@@ -32,8 +32,8 @@ class ConfigurationViewModel(
         trackableManager.toggleTrackableEnabled(trackable, checked)
     }
 
-    fun trackableAdded(title: String) = viewModelScope.launch {
-        updateTrackablesUseCase.addTrackable(title)
+    fun trackableAdded(trackable: Trackable) = viewModelScope.launch {
+        updateTrackablesUseCase.addTrackable(trackable)
     }
 
     fun trackableDeleted(trackable: Trackable) = viewModelScope.launch {

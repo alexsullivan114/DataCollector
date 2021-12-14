@@ -7,27 +7,6 @@ import java.util.*
 @Dao
 interface TrackableDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun saveEntity(entity: TrackableEntity)
-
-    @Query("SELECT * FROM trackable_entity_table WHERE date = :date AND trackableId = :id LIMIT 1")
-    suspend fun getTrackableEntity(date: Date, id: String): TrackableEntity
-
-    @Query("SELECT * FROM trackable_entity_table")
-    suspend fun getTrackableEntities(): List<TrackableEntity>
-
-    @Query("SELECT * FROM trackable_entity_table WHERE date = :date")
-    suspend fun getTrackableEntities(date: Date): List<TrackableEntity>
-
-    @Query("DELETE FROM trackable_entity_table WHERE trackableId = :id")
-    suspend fun deleteTrackableEntities(id: String)
-
-    @Query("DELETE FROM trackable_entity_table")
-    suspend fun nuke()
-
-    @Query("SELECT * FROM trackable_table where enabled = 1")
-    suspend fun getEnabledTrackables(): List<Trackable>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun saveTrackable(trackable: Trackable)
 
     @Delete
@@ -41,4 +20,7 @@ interface TrackableDao {
 
     @Query("SELECT * FROM trackable_table WHERE id = :id")
     suspend fun getTrackableById(id: String): Trackable?
+
+    @Query("SELECT * FROM trackable_table where enabled = 1")
+    suspend fun getEnabled(): List<Trackable>
 }

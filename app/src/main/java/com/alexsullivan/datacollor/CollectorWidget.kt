@@ -6,14 +6,12 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.util.Log
 import android.widget.RemoteViews
-import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
-import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.database.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.util.*
 
 @DelicateCoroutinesApi
 class CollectorWidget : AppWidgetProvider() {
@@ -46,11 +44,24 @@ class CollectorWidget : AppWidgetProvider() {
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         GlobalScope.launch {
+            val action = intent.action ?: return@launch
             val enabledTrackables = getTrackingManager(context).getEnabledTrackables()
-            if (enabledTrackables.map { it.title}.contains(intent.action)) {
-                val trackable = enabledTrackables.first { it.title == intent.action }
+            Log.d("CollectorWidget", "Action: $action")
+            if (enabledTrackables.map { it.title}.any { action.contains(it) }) {
+                val trackable = enabledTrackables.first { action.contains(it.title) }
+                Log.d("CollectorWidget", "Trackable ${trackable}")
+                val trackingManager = getTrackingManager(context)
                 GlobalScope.launch {
-                    getTrackingManager(context).toggle(trackable)
+                    when (trackable.type) {
+                        TrackableType.BOOLEAN -> trackingManager.toggle(trackable)
+                        TrackableType.NUMBER -> {
+                            if (action.contains("increment")) {
+                                trackingManager.updateCount(trackable, true)
+                            } else {
+                                trackingManager.updateCount(trackable, false)
+                            }
+                        }
+                    }
                     val ids: IntArray = AppWidgetManager.getInstance(context)
                         .getAppWidgetIds(ComponentName(context, CollectorWidget::class.java))
                     onUpdate(context, AppWidgetManager.getInstance(context), ids)
@@ -62,6 +73,7 @@ class CollectorWidget : AppWidgetProvider() {
     private fun getPendingSelfIntent(context: Context, action: String): PendingIntent {
         val intent = Intent(context, javaClass)
         intent.action = action
+        // TODO: Pending intent mutability flag?
         return PendingIntent.getBroadcast(context, 0, intent, 0)
     }
 
@@ -73,26 +85,55 @@ class CollectorWidget : AppWidgetProvider() {
         GlobalScope.launch {
             val remoteViews = RemoteViews(context.packageName, R.layout.collector_widget)
             remoteViews.removeAllViews(R.id.grid)
-            val trackables = getTrackingManager(context).getEnabledTrackables()
+            val trackables = getTrackingManager(context).getEnabledTrackables().sortedBy { it.title }
             val trackableEntities = getTrackingManager(context).getTodaysTrackableEntities()
             for (trackable in trackables) {
-                val associatedTrackableEntity =
-                    trackableEntities.firstOrNull { it.trackableId == trackable.id }
-                val executed = associatedTrackableEntity?.executed ?: false
-                val checkbox =
-                    if (executed) R.drawable.ic_baseline_check_box_24 else R.drawable.ic_baseline_check_box_outline_blank_24
-                val item = RemoteViews(context.packageName, R.layout.trackable_item)
+                val entity = trackableEntities.firstOrNull { it.trackableId == trackable.id }!!
+                val item = when (entity) {
+                    is TrackableEntity.Boolean -> createBooleanTrackableView(context, trackable, entity.booleanEntity)
+                    is TrackableEntity.Number -> createNumberTrackableView(context, trackable, entity.numberEntity)
+                }
                 remoteViews.addView(R.id.grid, item)
-                item.setTextViewText(R.id.text, trackable.title)
-                item.setImageViewResource(R.id.check, checkbox)
-                item.setOnClickPendingIntent(
-                    R.id.check,
-                    getPendingSelfIntent(context, trackable.title)
-                )
             }
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
         }
+    }
+
+    private fun createNumberTrackableView(
+        context: Context,
+        trackable: Trackable,
+        entity: NumberTrackableEntity
+    ): RemoteViews {
+        val item = RemoteViews(context.packageName, R.layout.number_trackable_item)
+        item.setTextViewText(R.id.text, trackable.title)
+        item.setTextViewText(R.id.count, entity.count.toString())
+        item.setOnClickPendingIntent(
+            R.id.increment,
+            getPendingSelfIntent(context, trackable.title + "-increment")
+        )
+        item.setOnClickPendingIntent(
+            R.id.decrement,
+            getPendingSelfIntent(context, trackable.title + "-decrement")
+        )
+        return item
+    }
+
+    private fun createBooleanTrackableView(
+        context: Context,
+        trackable: Trackable,
+        entity: BooleanTrackableEntity
+    ): RemoteViews {
+        val checkbox =
+            if (entity.executed) R.drawable.ic_baseline_check_box_24 else R.drawable.ic_baseline_check_box_outline_blank_24
+        val item = RemoteViews(context.packageName, R.layout.boolean_trackable_item)
+        item.setTextViewText(R.id.text, trackable.title)
+        item.setImageViewResource(R.id.check, checkbox)
+        item.setOnClickPendingIntent(
+            R.id.check,
+            getPendingSelfIntent(context, trackable.title)
+        )
+        return item
     }
 
     private fun getTrackingManager(context: Context): TrackableManager {

@@ -22,7 +22,7 @@
         android:shadowDy="1.3"
         android:shadowRadius="1.6"
         android:textColor="@android:color/white"
-        android:text="Slept well last night" />
+        tools:text="Slept well last night" />
 
     <ImageView
         android:id="@+id/check"

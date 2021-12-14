@@ -1,16 +1,16 @@
-package com.alexsullivan.datacollor
+package com.alexsullivan.datacollor.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
+import com.alexsullivan.datacollor.BackupTrackablesUseCase
+import com.alexsullivan.datacollor.QLPreferences
+import com.alexsullivan.datacollor.TrackableSerializer
+import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.database.TrackableEntity
 import com.alexsullivan.datacollor.database.TrackableManager
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 class MainViewModel(
     private val trackableManager: TrackableManager,
@@ -40,8 +40,8 @@ class MainViewModel(
         trackableManager.toggleTrackableEnabled(trackable, checked)
     }
 
-    fun trackableAdded(title: String) = viewModelScope.launch {
-        updateTrackablesUseCase.addTrackable(title)
+    fun trackableAdded(trackable: Trackable) = viewModelScope.launch {
+        updateTrackablesUseCase.addTrackable(trackable)
     }
 
     fun trackableDeleted(trackable: Trackable) = viewModelScope.launch {

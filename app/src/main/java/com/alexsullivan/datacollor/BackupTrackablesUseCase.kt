@@ -1,8 +1,8 @@
 package com.alexsullivan.datacollor
 
 import android.content.Context
-import android.util.Log
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
+import com.alexsullivan.datacollor.database.TrackableManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.Scopes
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -13,10 +13,9 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
 
 class BackupTrackablesUseCase(
-    private val trackableEntityDatabase: TrackableEntityDatabase,
+    private val trackableManager: TrackableManager,
     private val context: Context
 ) {
     suspend fun uploadToDrive(fileId: String) = withContext(Dispatchers.IO) {
@@ -36,9 +35,8 @@ class BackupTrackablesUseCase(
     }
 
     private suspend fun createTrackablesCsv() = withContext(Dispatchers.IO) {
-        val dao = trackableEntityDatabase.trackableEntityDao()
-        val trackableEntities = dao.getTrackableEntities()
-        val trackables = dao.getTrackables()
+        val trackableEntities = trackableManager.getTrackableEntities()
+        val trackables = trackableManager.getTrackables()
         TrackableSerializer.serialize(trackableEntities, trackables)
     }
 

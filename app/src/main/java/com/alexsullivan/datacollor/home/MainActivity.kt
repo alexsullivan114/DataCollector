@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor
+package com.alexsullivan.datacollor.home
 
 import android.os.Bundle
 import androidx.activity.compose.setContent
@@ -22,7 +22,6 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
@@ -30,9 +29,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.sp
 import androidx.work.*
+import com.alexsullivan.datacollor.*
+import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
@@ -49,7 +49,7 @@ class MainActivity : AppCompatActivity() {
                 val database = TrackableEntityDatabase.getDatabase(this@MainActivity)
                 val manager = TrackableManager(database)
                 val updateUseCase = UpdateTrackablesUseCase(manager)
-                val backupUseCase = BackupTrackablesUseCase(database, this@MainActivity)
+                val backupUseCase = BackupTrackablesUseCase(manager, this@MainActivity)
                 val prefs = QLPreferences(this@MainActivity)
                 return MainViewModel(manager, updateUseCase, backupUseCase, prefs) as T
             }
@@ -147,7 +147,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
         if (showDialog.value) {
-            AddItemDialog(
+            AddTrackableDialog(
                 onDismiss = { showDialog.value = false },
                 onDone = {
                     showDialog.value = false
@@ -176,22 +176,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-        )
-    }
-
-    @Composable
-    fun AddItemDialog(onDismiss: () -> Unit, onDone: (String) -> Unit) {
-        var text by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("Add item to track") },
-            text = {
-                OutlinedTextField(
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    value = text,
-                    onValueChange = { text = it })
-            },
-            confirmButton = { TextButton(onClick = { onDone(text) }) { Text("Ok") } },
         )
     }
 

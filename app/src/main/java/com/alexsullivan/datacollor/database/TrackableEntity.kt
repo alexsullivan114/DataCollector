@@ -1,11 +1,18 @@
 package com.alexsullivan.datacollor.database
 
-import androidx.room.Entity
 import java.util.*
 
-@Entity(tableName = "trackable_entity_table", primaryKeys = ["trackableId", "date"])
-data class TrackableEntity(
-    val trackableId: String,
-    val executed: Boolean,
+sealed class TrackableEntity {
+    val trackableId: String
+        get() = when (this) {
+            is Boolean -> booleanEntity.trackableId
+            is Number -> numberEntity.trackableId
+        }
     val date: Date
-)
+        get() = when (this) {
+            is Boolean -> booleanEntity.date
+            is Number -> numberEntity.date
+        }
+    data class Number(val numberEntity: NumberTrackableEntity): TrackableEntity()
+    data class Boolean(val booleanEntity: BooleanTrackableEntity): TrackableEntity()
+}

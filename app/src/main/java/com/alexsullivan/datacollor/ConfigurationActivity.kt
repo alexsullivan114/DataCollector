@@ -11,7 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -19,10 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
@@ -31,6 +27,7 @@ import androidx.lifecycle.lifecycleScope
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.home.AddTrackableDialog
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
@@ -105,7 +102,7 @@ class ConfigurationActivity : AppCompatActivity() {
                     }
                 }
                 if (showDialog) {
-                    AddItemDialog(
+                    AddTrackableDialog(
                         onDismiss = { showDialog = false },
                         onDone = {
                             showDialog = false
@@ -133,22 +130,6 @@ class ConfigurationActivity : AppCompatActivity() {
         }) {
             Text("Done")
         }
-    }
-
-    @Composable
-    fun AddItemDialog(onDismiss: () -> Unit, onDone: (String) -> Unit) {
-        var text by remember { mutableStateOf("") }
-        AlertDialog(
-            onDismissRequest = onDismiss,
-            title = { Text("Add item to track") },
-            text = {
-                OutlinedTextField(
-                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-                    value = text,
-                    onValueChange = { text = it })
-            },
-            confirmButton = { TextButton(onClick = { onDone(text) }) { Text("Ok") } },
-        )
     }
 
     @Composable
