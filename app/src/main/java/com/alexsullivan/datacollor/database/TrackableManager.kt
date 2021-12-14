@@ -4,6 +4,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
 import java.util.*
+import kotlin.math.max
 
 class TrackableManager(database: TrackableEntityDatabase) {
     private val booleanDao = database.trackableBooleanDao()
@@ -43,7 +44,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
     suspend fun updateCount(trackable: Trackable, increment: Boolean) {
         val entity = numberDao.getEntity(midnight(), trackable.id)
         withContext(Dispatchers.IO) {
-            val newCount = if (increment) entity.count + 1 else entity.count - 1
+            val newCount = if (increment) entity.count + 1 else max(0, entity.count - 1)
             val updatedEntity = entity.copy(count = newCount)
             numberDao.save(updatedEntity)
         }
