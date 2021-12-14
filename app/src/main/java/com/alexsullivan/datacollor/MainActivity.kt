@@ -1,9 +1,7 @@
 package com.alexsullivan.datacollor
 
-import android.Manifest
 import android.os.Bundle
 import androidx.activity.compose.setContent
-import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.layout.*
@@ -20,38 +18,26 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
-import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
-import android.util.Log
-import android.widget.ProgressBar
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.sp
 import androidx.work.*
+import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.Scopes
 import com.google.android.gms.common.api.Scope
-import com.google.api.client.extensions.android.http.AndroidHttp
-import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
-import com.google.api.client.http.InputStreamContent
-import com.google.api.client.http.javanet.NetHttpTransport
-import com.google.api.client.json.gson.GsonFactory
-import com.google.api.services.drive.Drive
 import com.google.api.services.drive.DriveScopes
-import com.google.api.services.drive.model.File
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.io.ByteArrayInputStream
 import java.util.concurrent.TimeUnit
 
 @ExperimentalMaterialApi
@@ -88,7 +74,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            TrackableList()
+            Screen()
         }
 
         lifecycleScope.launch {
@@ -108,61 +94,89 @@ class MainActivity : AppCompatActivity() {
     }
 
     @Composable
-    fun TrackableList(modifier: Modifier = Modifier) {
-        var showDialog by remember { mutableStateOf(false) }
-        val trackables by viewModel.itemsFlow.collectAsState()
+    fun Screen(modifier: Modifier = Modifier) {
+        val showDialog = remember { mutableStateOf(false) }
         AppTheme {
             Scaffold(
+                topBar = { QLAppBar() },
                 floatingActionButton = {
-                    FloatingActionButton(onClick = { showDialog = true }) {
+                    FloatingActionButton(onClick = { showDialog.value = true }) {
                         Icon(Icons.Filled.Add, "Add")
                     }
                 }
             ) {
-                LazyColumn(
-                    modifier = modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    item {
-                        Text(
-                            text = "Toggle to add tracking to the widget",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                    trackables.sortedBy { it.title }.forEach { trackable ->
-                        item(key = trackable.id) {
-                            val dismissState = rememberDismissState()
-                            val isDismissed =
-                                dismissState.isDismissed(DismissDirection.EndToStart) ||
-                                        dismissState.isDismissed(DismissDirection.StartToEnd)
-                            if (isDismissed) {
-                                viewModel.trackableDeleted(trackable)
-                            }
-                            SwipeToDismiss(
-                                state = dismissState,
-                                background = { Box(modifier = Modifier.background(Color.Red)) }) {
-                                TrackableItem(trackable)
-                            }
-                        }
-                    }
-                    item {
-                        ExportButton()
-                    }
-                }
-                if (showDialog) {
-                    AddItemDialog(
-                        onDismiss = { showDialog = false },
-                        onDone = {
-                            showDialog = false
-                            viewModel.trackableAdded(it)
-                        }
-                    )
-                }
+                TrackableItemList(modifier = modifier, showDialog)
             }
 
         }
+    }
+
+    @Composable
+    fun TrackableItemList(modifier: Modifier, showDialog: MutableState<Boolean>) {
+        val trackables by viewModel.itemsFlow.collectAsState()
+        LazyColumn(
+            modifier = modifier.fillMaxWidth(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            item {
+                Text(
+                    text = "Toggle to add tracking to the widget",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(16.dp)
+                )
+            }
+            trackables.sortedBy { it.title }.forEach { trackable ->
+                item(key = trackable.id) {
+                    val dismissState = rememberDismissState()
+                    val isDismissed =
+                        dismissState.isDismissed(DismissDirection.EndToStart) ||
+                                dismissState.isDismissed(DismissDirection.StartToEnd)
+                    if (isDismissed) {
+                        viewModel.trackableDeleted(trackable)
+                    }
+                    SwipeToDismiss(
+                        state = dismissState,
+                        background = { Box(modifier = Modifier.background(Color.Red)) }) {
+                        TrackableItem(trackable)
+                    }
+                }
+            }
+            item {
+                ExportButton()
+            }
+        }
+        if (showDialog.value) {
+            AddItemDialog(
+                onDismiss = { showDialog.value = false },
+                onDone = {
+                    showDialog.value = false
+                    viewModel.trackableAdded(it)
+                }
+            )
+        }
+    }
+
+    @Composable
+    fun QLAppBar() {
+        var showOptionsDropdown by remember { mutableStateOf(false) }
+        TopAppBar(
+            title = { Text(stringResource(R.string.app_name)) },
+            actions = {
+                IconButton(onClick = { showOptionsDropdown = true }) {
+                    Icon(Icons.Filled.MoreVert, "Menu")
+                }
+                DropdownMenu(
+                    expanded = showOptionsDropdown,
+                    onDismissRequest = { showOptionsDropdown = false }) {
+                    DropdownMenuItem(onClick = {
+                        startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                    }) {
+                        Text("Settings")
+                    }
+                }
+            }
+        )
     }
 
     @Composable
