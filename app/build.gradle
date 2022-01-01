@@ -4,21 +4,13 @@ apply plugin: 'kotlin-kapt'
 
 
 android {
-    signingConfigs {
-        release {
-            storeFile file('/Users/alexscomputerminedonttouch/Desktop/quantified_self_keystore')
-            storePassword 'b@7qzTZZ59LN'
-            keyAlias 'alias0'
-            keyPassword 'b@7qzTZZ59LN'
-        }
-    }
     compileSdkVersion 31
 
     defaultConfig {
         applicationId "com.alexsullivan.datacollor"
         minSdkVersion 22
         targetSdkVersion 31
-        versionCode 2
+        versionCode 3
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -28,7 +20,6 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
         }
     }
 
