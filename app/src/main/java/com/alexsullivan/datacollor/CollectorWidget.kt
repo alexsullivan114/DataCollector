@@ -46,16 +46,17 @@ class CollectorWidget : AppWidgetProvider() {
         GlobalScope.launch {
             val action = intent.action ?: return@launch
             val enabledTrackables = getTrackingManager(context).getEnabledTrackables()
+            val trackableTitle = action.substringBefore("-increment").substringBefore("-decrement")
             Log.d("CollectorWidget", "Action: $action")
-            if (enabledTrackables.map { it.title}.any { action.contains(it) }) {
-                val trackable = enabledTrackables.first { action.contains(it.title) }
-                Log.d("CollectorWidget", "Trackable ${trackable}")
+            if (enabledTrackables.map { it.title}.any { trackableTitle == it }) {
+                val trackable = enabledTrackables.first { trackableTitle == it.title }
+                Log.d("CollectorWidget", "Trackable $trackable")
                 val trackingManager = getTrackingManager(context)
                 GlobalScope.launch {
                     when (trackable.type) {
                         TrackableType.BOOLEAN -> trackingManager.toggle(trackable)
                         TrackableType.NUMBER -> {
-                            if (action.contains("increment")) {
+                            if (action.contains("-increment")) {
                                 trackingManager.updateCount(trackable, true)
                             } else {
                                 trackingManager.updateCount(trackable, false)
