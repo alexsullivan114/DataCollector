@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor.database
+package com.alexsullivan.datacollor.database.entities
 
 import androidx.room.Entity
 import java.util.*

@@ -3,4 +3,10 @@
     <color name="colorPrimary">#DC423D</color>
     <color name="colorPrimaryDark">#CB2B25</color>
     <color name="colorAccent">#DBAC3D</color>
+
+    <color name="ratingTerrible">#fb5154</color>
+    <color name="ratingPoor">#f9a550</color>
+    <color name="ratingMediocre">#ffea76</color>
+    <color name="ratingGood">#abd372</color>
+    <color name="ratingGreat">#27ba2a</color>
 </resources>

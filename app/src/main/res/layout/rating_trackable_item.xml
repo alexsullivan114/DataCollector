@@ -29,21 +29,12 @@
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/checkboxSpacing">
 
-        <TextView
-            android:id="@+id/count"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+        <ImageView
+            android:id="@+id/rating"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
             android:layout_gravity="center"
-            android:background="@android:color/transparent"
-            android:shadowColor="#000000"
-            android:shadowDx="1.5"
-            android:shadowDy="1.3"
-            android:shadowRadius="1.6"
-            android:src="@drawable/checkbox"
-            android:textColor="@android:color/white"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            tools:text="5" />
+            android:src="@drawable/rating_terrible" />
 
         <LinearLayout
             android:layout_width="match_parent"

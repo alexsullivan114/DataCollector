@@ -2,10 +2,8 @@ package com.alexsullivan.datacollor.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alexsullivan.datacollor.BackupTrackablesUseCase
+import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.QLPreferences
-import com.alexsullivan.datacollor.database.Trackable
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch

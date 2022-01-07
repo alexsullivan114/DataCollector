@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor
+package com.alexsullivan.datacollor.configuration
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
@@ -24,10 +24,13 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
+import com.alexsullivan.datacollor.AppTheme
+import com.alexsullivan.datacollor.CollectorWidget
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.home.AddTrackableDialog
+import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 

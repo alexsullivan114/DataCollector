@@ -9,6 +9,7 @@ import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
 import com.alexsullivan.datacollor.database.*
+import com.alexsullivan.datacollor.database.entities.*
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -46,7 +47,12 @@ class CollectorWidget : AppWidgetProvider() {
         GlobalScope.launch {
             val action = intent.action ?: return@launch
             val enabledTrackables = getTrackingManager(context).getEnabledTrackables()
-            val trackableTitle = action.substringBefore("-increment").substringBefore("-decrement")
+            // TODO: This is super fragile. Is there a better way we can handle this?
+            val trackableTitle = action
+                .substringBefore("-rating-increment")
+                .substringBefore("-rating-decrement")
+                .substringBefore("-increment")
+                .substringBefore("-decrement")
             Log.d("CollectorWidget", "Action: $action")
             if (enabledTrackables.map { it.title}.any { trackableTitle == it }) {
                 val trackable = enabledTrackables.first { trackableTitle == it.title }
@@ -56,11 +62,12 @@ class CollectorWidget : AppWidgetProvider() {
                     when (trackable.type) {
                         TrackableType.BOOLEAN -> trackingManager.toggle(trackable)
                         TrackableType.NUMBER -> {
-                            if (action.contains("-increment")) {
-                                trackingManager.updateCount(trackable, true)
-                            } else {
-                                trackingManager.updateCount(trackable, false)
-                            }
+                            val increment = action.contains("-increment")
+                            trackingManager.updateCount(trackable, increment)
+                        }
+                        TrackableType.RATING -> {
+                            val increment = action.contains("-increment")
+                            trackingManager.updateRating(trackable, increment)
                         }
                     }
                     val ids: IntArray = AppWidgetManager.getInstance(context)
@@ -93,12 +100,39 @@ class CollectorWidget : AppWidgetProvider() {
                 val item = when (entity) {
                     is TrackableEntity.Boolean -> createBooleanTrackableView(context, trackable, entity.booleanEntity)
                     is TrackableEntity.Number -> createNumberTrackableView(context, trackable, entity.numberEntity)
+                    is TrackableEntity.Rating -> createRatingTrackableView(context, trackable, entity.ratingEntity)
                 }
                 remoteViews.addView(R.id.grid, item)
             }
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
         }
+    }
+
+    private fun createRatingTrackableView(
+        context: Context,
+        trackable: Trackable,
+        entity: RatingTrackableEntity
+    ): RemoteViews {
+        val ratingDrawableRes = when(entity.rating) {
+            Rating.TERRIBLE -> R.drawable.rating_terrible
+            Rating.POOR -> R.drawable.rating_poor
+            Rating.MEDIOCRE -> R.drawable.rating_mediocre
+            Rating.GOOD -> R.drawable.rating_good
+            Rating.GREAT -> R.drawable.rating_great
+        }
+        val item = RemoteViews(context.packageName, R.layout.rating_trackable_item)
+        item.setTextViewText(R.id.text, trackable.title)
+        item.setImageViewResource(R.id.rating, ratingDrawableRes)
+        item.setOnClickPendingIntent(
+            R.id.increment,
+            getPendingSelfIntent(context, trackable.title + "-rating-increment")
+        )
+        item.setOnClickPendingIntent(
+            R.id.decrement,
+            getPendingSelfIntent(context, trackable.title + "-rating-decrement")
+        )
+        return item
     }
 
     private fun createNumberTrackableView(

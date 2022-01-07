@@ -4,16 +4,29 @@ import android.content.Context
 import androidx.room.*
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
+import com.alexsullivan.datacollor.database.daos.BooleanEntityDao
+import com.alexsullivan.datacollor.database.daos.NumberEntityDao
+import com.alexsullivan.datacollor.database.daos.RatingEntityDao
+import com.alexsullivan.datacollor.database.daos.TrackableDao
+import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
+import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
+import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
 @Database(
-    version = 5,
-    entities = [BooleanTrackableEntity::class, NumberTrackableEntity::class, Trackable::class],
+    version = 6,
+    entities = [
+        BooleanTrackableEntity::class,
+        NumberTrackableEntity::class,
+        RatingTrackableEntity::class,
+        Trackable::class
+    ],
     autoMigrations = [
-        AutoMigration(from = 4, to = 5)
+        AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6)
     ]
 )
 @TypeConverters(Converters::class)
@@ -32,6 +45,7 @@ abstract class TrackableEntityDatabase : RoomDatabase() {
     abstract fun trackableDao(): TrackableDao
     abstract fun trackableBooleanDao(): BooleanEntityDao
     abstract fun trackableNumberDao(): NumberEntityDao
+    abstract fun trackableRatingDao(): RatingEntityDao
 
     companion object {
         // Singleton prevents multiple instances of database opening at the

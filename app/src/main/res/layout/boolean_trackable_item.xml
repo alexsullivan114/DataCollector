@@ -6,7 +6,7 @@
     tools:layout_width="match_parent"
     tools:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="@dimen/widget_margin"
+    android:padding="@dimen/widgetMargin"
     android:layout_rowWeight="1"
     android:layout_columnWeight="1"
     android:gravity="center"
@@ -27,7 +27,7 @@
     <ImageView
         android:id="@+id/check"
         android:src="@drawable/checkbox"
-        android:paddingTop="@dimen/checkbox_spacing"
+        android:paddingTop="@dimen/checkboxSpacing"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

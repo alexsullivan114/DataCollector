@@ -1,9 +1,10 @@
-package com.alexsullivan.datacollor
+package com.alexsullivan.datacollor.configuration
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch

@@ -1,7 +1,9 @@
 package com.alexsullivan.datacollor
 
 import android.annotation.SuppressLint
+import androidx.compose.ui.text.toLowerCase
 import com.alexsullivan.datacollor.database.*
+import com.alexsullivan.datacollor.database.entities.*
 import java.lang.NumberFormatException
 import java.text.SimpleDateFormat
 import java.util.*
@@ -9,13 +11,18 @@ import java.util.*
 object TrackableSerializer {
     @SuppressLint("SimpleDateFormat")
     private val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+    private const val ratingPrefix = "$\$: "
 
     fun serialize(entities: List<TrackableEntity>, trackables: List<Trackable>): String {
         val groupedTrackables = entities.groupBy { it.date }.toSortedMap()
         val csvText = groupedTrackables.map { (date, entities) ->
             var entry = format.format(date)
             val pairedEntities = entities.map { entity ->
-                val associatedTrackable = trackables.first { it.id == entity.trackableId }
+                val associatedTrackable = trackables.firstOrNull { it.id == entity.trackableId }
+                if (associatedTrackable == null) {
+                    println("Woofers")
+                    throw RuntimeException("Blegh")
+                }
                 entity to associatedTrackable
             }
             val sortedEntities = pairedEntities.sortedBy { it.second.title }
@@ -23,6 +30,7 @@ object TrackableSerializer {
                 val value = when (entity) {
                     is TrackableEntity.Boolean -> entity.booleanEntity.executed.toString()
                     is TrackableEntity.Number -> entity.numberEntity.count.toString()
+                    is TrackableEntity.Rating -> entity.ratingEntity.rating.serialized()
                 }
                 entry += ",${trackable.title},${value}"
             }
@@ -52,6 +60,7 @@ object TrackableSerializer {
             val type = when (entries[0]) {
                 is TrackableEntity.Boolean -> TrackableType.BOOLEAN
                 is TrackableEntity.Number -> TrackableType.NUMBER
+                is TrackableEntity.Rating -> TrackableType.RATING
             }
             Trackable(UUID.randomUUID().toString(), title, true, type)
         }
@@ -61,6 +70,7 @@ object TrackableSerializer {
                 when (entity) {
                     is TrackableEntity.Boolean -> TrackableEntity.Boolean(entity.booleanEntity.copy(trackableId = trackable.id))
                     is TrackableEntity.Number -> TrackableEntity.Number(entity.numberEntity.copy(trackableId = trackable.id))
+                    is TrackableEntity.Rating -> TrackableEntity.Rating(entity.ratingEntity.copy(trackableId = trackable.id))
                 }
             }
         }
@@ -68,12 +78,28 @@ object TrackableSerializer {
     }
 
     private fun constructEntity(data: String, date: Date): TrackableEntity {
-        return try {
-            val numberData = data.toInt()
-            return TrackableEntity.Number(NumberTrackableEntity("", numberData, date))
-        } catch (e: NumberFormatException) {
-            val booleanData = data.toBooleanStrict()
-            return TrackableEntity.Boolean(BooleanTrackableEntity("", booleanData, date))
+        val numberData = data.toIntOrNull()
+        val rating = data.deserializeToRating()
+        return when {
+            numberData != null -> TrackableEntity.Number(NumberTrackableEntity("", numberData, date))
+            rating != null -> TrackableEntity.Rating(RatingTrackableEntity("", rating, date))
+            else -> {
+                val booleanData = data.toBooleanStrict()
+                TrackableEntity.Boolean(BooleanTrackableEntity("", booleanData, date))
+            }
         }
+    }
+
+    private fun Rating.serialized() = this.name.lowercase().replaceFirstChar {
+        if (it.isLowerCase()) it.titlecase(
+            Locale.getDefault()
+        ) else it.toString()
+    }
+
+    private fun String.deserializeToRating(): Rating? {
+        val rating = Rating.values().firstOrNull { rating ->
+            rating.name.lowercase() == this.lowercase()
+        }
+        return rating
     }
 }

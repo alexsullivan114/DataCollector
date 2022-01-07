@@ -1,9 +1,9 @@
-package com.alexsullivan.datacollor
+package com.alexsullivan.datacollor.drive
 
 import android.content.Context
 import androidx.work.CoroutineWorker
-import androidx.work.Worker
 import androidx.work.WorkerParameters
+import com.alexsullivan.datacollor.QLPreferences
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
 

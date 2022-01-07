@@ -6,7 +6,7 @@
     android:rowCount="3"
     android:alignmentMode="alignBounds"
     android:useDefaultMargins="true"
-    android:paddingVertical="@dimen/widget_margin"
-    android:paddingHorizontal="@dimen/widget_margin">
+    android:paddingVertical="@dimen/widgetMargin"
+    android:paddingHorizontal="@dimen/widgetMargin">
 
 </GridLayout>

@@ -1,9 +1,10 @@
-package com.alexsullivan.datacollor.database
+package com.alexsullivan.datacollor.database.daos
 
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import java.util.*
 
 @Dao

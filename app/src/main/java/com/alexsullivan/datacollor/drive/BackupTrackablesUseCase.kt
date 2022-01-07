@@ -1,7 +1,7 @@
-package com.alexsullivan.datacollor
+package com.alexsullivan.datacollor.drive
 
 import android.content.Context
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
+import com.alexsullivan.datacollor.TrackableSerializer
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.Scopes
@@ -58,7 +58,7 @@ class BackupTrackablesUseCase(
     }
 
     private fun createDriveObject(): Drive {
-        val account = GoogleSignIn.getLastSignedInAccount(context)
+        val account = GoogleSignIn.getLastSignedInAccount(context)!!
         val credential = GoogleAccountCredential.usingOAuth2(context, listOf(Scopes.DRIVE_FILE))
         credential.selectedAccount = account.account
         val drive = Drive.Builder(NetHttpTransport(), GsonFactory(), credential)

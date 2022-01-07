@@ -2,7 +2,7 @@ package com.alexsullivan.datacollor.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.alexsullivan.datacollor.BackupTrackablesUseCase
+import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.QLPreferences
 import com.alexsullivan.datacollor.TrackableSerializer
 import com.alexsullivan.datacollor.UpdateTrackablesUseCase
