@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity() {
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
             GoogleSignIn.getSignedInAccountFromIntent(it.data)
-                .addOnCompleteListener {
+                .addOnSuccessListener {
                     viewModel.signedInToGoogle()
                 }
                 .addOnFailureListener {
