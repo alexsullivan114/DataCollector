@@ -54,7 +54,7 @@ class CollectorWidget : AppWidgetProvider() {
                 .substringBefore("-increment")
                 .substringBefore("-decrement")
             Log.d("CollectorWidget", "Action: $action")
-            if (enabledTrackables.map { it.title}.any { trackableTitle == it }) {
+            if (enabledTrackables.map { it.title }.any { trackableTitle == it }) {
                 val trackable = enabledTrackables.first { trackableTitle == it.title }
                 Log.d("CollectorWidget", "Trackable $trackable")
                 val trackingManager = getTrackingManager(context)

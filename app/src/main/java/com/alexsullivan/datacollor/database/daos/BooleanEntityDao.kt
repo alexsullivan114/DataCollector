@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
+import kotlinx.coroutines.flow.Flow
 import java.util.*
 
 @Dao
@@ -20,6 +21,9 @@ interface BooleanEntityDao {
 
     @Query("SELECT * FROM boolean_trackable_entity_table WHERE date = :date")
     suspend fun getEntities(date: Date): List<BooleanTrackableEntity>
+
+    @Query("SELECT * FROM boolean_trackable_entity_table WHERE date = :date")
+    fun getEntitiesFlow(date: Date): Flow<List<BooleanTrackableEntity>>
 
     @Query("DELETE FROM boolean_trackable_entity_table WHERE trackableId = :id")
     suspend fun delete(id: String)

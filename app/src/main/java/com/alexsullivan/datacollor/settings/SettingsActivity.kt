@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -42,7 +44,18 @@ class SettingsActivity : AppCompatActivity() {
         setContent {
             AppTheme {
                 Scaffold(
-                    topBar = { TopAppBar(title = { Text("Settings") }) }
+                    topBar = {
+                        TopAppBar(
+                            title = { Text("Settings") },
+                            navigationIcon = {
+                                IconButton(onClick = this::finish) {
+                                    Icon(
+                                        Icons.Filled.ArrowBack,
+                                        "Back"
+                                    )
+                                }
+                            })
+                    }
                 ) {
                     LazyColumn(modifier = Modifier.padding(16.dp)) {
                         item {
@@ -65,7 +78,9 @@ class SettingsActivity : AppCompatActivity() {
             val isBackingUp by viewModel.backupLoadingFlow.collectAsState()
             Text("Manually backup to Drive")
             if (isBackingUp) {
-                CircularProgressIndicator(modifier = Modifier.height(24.dp).width(24.dp))
+                CircularProgressIndicator(modifier = Modifier
+                    .height(24.dp)
+                    .width(24.dp))
             } else {
                 Icon(
                     painter = painterResource(id = R.drawable.backup),

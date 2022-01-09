@@ -37,6 +37,9 @@ import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
+import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
+import com.alexsullivan.datacollor.utils.ExportUtil
+import com.alexsullivan.datacollor.utils.refreshWidget
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
@@ -83,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.triggerUpdateWidgetFlow
                 .collect {
-                    refreshWidget()
+                    refreshWidget(this@MainActivity)
                 }
         }
         lifecycleScope.launch {
@@ -173,9 +176,16 @@ class MainActivity : AppCompatActivity() {
                     expanded = showOptionsDropdown,
                     onDismissRequest = { showOptionsDropdown = false }) {
                     DropdownMenuItem(onClick = {
+                        showOptionsDropdown = false
                         startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
                     }) {
                         Text("Settings")
+                    }
+                    DropdownMenuItem(onClick = {
+                        showOptionsDropdown = false
+                        startActivity(Intent(this@MainActivity, PreviousDaysActivity::class.java))
+                    }) {
+                        Text("Past Days")
                     }
                 }
             }
@@ -211,15 +221,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun export() {
         lifecycleScope.launchWhenCreated { ExportUtil(this@MainActivity).export() }
-    }
-
-    private fun refreshWidget() {
-        val intent = Intent(this@MainActivity, CollectorWidget::class.java)
-        intent.action = AppWidgetManager.ACTION_APPWIDGET_UPDATE
-        val ids: IntArray = AppWidgetManager.getInstance(application)
-            .getAppWidgetIds(ComponentName(application, CollectorWidget::class.java))
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-        sendBroadcast(intent)
     }
 
     private fun signInToGoogle() {

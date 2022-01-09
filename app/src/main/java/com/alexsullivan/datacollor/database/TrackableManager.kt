@@ -1,8 +1,11 @@
 package com.alexsullivan.datacollor.database
 
 import com.alexsullivan.datacollor.database.entities.*
+import com.alexsullivan.datacollor.utils.midnight
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.util.*
 import kotlin.math.max
@@ -42,16 +45,18 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun toggle(trackable: Trackable) {
-        val entity = booleanDao.getEntity(midnight(), trackable.id)
+    suspend fun toggle(trackable: Trackable, date: Date = midnight()) {
+        println("Date: $date")
+        println("Trackable: $trackable")
+        val entity = booleanDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val updatedEntity = entity.copy(executed = !entity.executed)
             booleanDao.save(updatedEntity)
         }
     }
 
-    suspend fun updateCount(trackable: Trackable, increment: Boolean) {
-        val entity = numberDao.getEntity(midnight(), trackable.id)
+    suspend fun updateCount(trackable: Trackable, increment: Boolean, date: Date = midnight()) {
+        val entity = numberDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val newCount = if (increment) entity.count + 1 else max(0, entity.count - 1)
             val updatedEntity = entity.copy(count = newCount)
@@ -59,8 +64,8 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun updateRating(trackable: Trackable, increment: Boolean) {
-        val entity = ratingDao.getEntity(midnight(), trackable.id)
+    suspend fun updateRating(trackable: Trackable, increment: Boolean, date: Date = midnight()) {
+        val entity = ratingDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val newRating = if (increment) entity.rating.increment() else entity.rating.decrement()
             val updatedEntity = entity.copy(rating = newRating)
@@ -102,6 +107,23 @@ class TrackableManager(database: TrackableEntityDatabase) {
         return trackableDao.getTrackablesFlow()
     }
 
+    fun getTrackableEntitiesByDateFlow(date: Date): Flow<List<TrackableEntity>> {
+        val booleansFlow = booleanDao.getEntitiesFlow(date).map { entitiesList ->
+            entitiesList.map { TrackableEntity.Boolean(it) }
+        }
+        val numbersFlow = numberDao.getEntitiesFlow(date).map { entitiesList ->
+            entitiesList.map { TrackableEntity.Number(it) }
+        }
+        val ratingsFlow = ratingDao.getEntitiesFlow(date).map { entitiesList ->
+            entitiesList.map { TrackableEntity.Rating(it) }
+        }
+
+
+        return combine(booleansFlow, numbersFlow, ratingsFlow) { a, b, c ->
+            a + b + c
+        }
+    }
+
     suspend fun toggleTrackableEnabled(trackable: Trackable, enabled: Boolean) {
         val updatedTrackable = trackable.copy(enabled = enabled)
         trackableDao.saveTrackable(updatedTrackable)
@@ -119,14 +141,5 @@ class TrackableManager(database: TrackableEntityDatabase) {
         val numberEntities = numberDao.getEntities(midnight()).map { TrackableEntity.Number(it) }
         val ratingEntities = ratingDao.getEntities(midnight()).map { TrackableEntity.Rating(it) }
         return booleanEntities + numberEntities + ratingEntities
-    }
-
-    private fun midnight(): Date {
-        val calendar: Calendar = GregorianCalendar()
-        calendar[Calendar.HOUR_OF_DAY] = 0
-        calendar[Calendar.MINUTE] = 0
-        calendar[Calendar.SECOND] = 0
-        calendar[Calendar.MILLISECOND] = 0
-        return calendar.time
     }
 }
