@@ -81,8 +81,7 @@ class CollectorWidget : AppWidgetProvider() {
     private fun getPendingSelfIntent(context: Context, action: String): PendingIntent {
         val intent = Intent(context, javaClass)
         intent.action = action
-        // TODO: Pending intent mutability flag?
-        return PendingIntent.getBroadcast(context, 0, intent, 0)
+        return PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE)
     }
 
     private fun updateAppWidget(
