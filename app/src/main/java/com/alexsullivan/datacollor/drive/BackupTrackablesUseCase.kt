@@ -36,7 +36,7 @@ class BackupTrackablesUseCase(
 
     private suspend fun createTrackablesCsv() = withContext(Dispatchers.IO) {
         val trackableEntities = trackableManager.getTrackableEntities()
-        val trackables = trackableManager.getTrackables()
+        val trackables = trackableManager.getEnabledTrackables()
         TrackableSerializer.serialize(trackableEntities, trackables)
     }
 

@@ -1,38 +1,24 @@
 package com.alexsullivan.datacollor
 
 import android.annotation.SuppressLint
-import androidx.compose.ui.text.toLowerCase
 import com.alexsullivan.datacollor.database.*
 import com.alexsullivan.datacollor.database.entities.*
-import java.lang.NumberFormatException
 import java.text.SimpleDateFormat
 import java.util.*
 
 object TrackableSerializer {
     @SuppressLint("SimpleDateFormat")
     private val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-    private const val ratingPrefix = "$\$: "
 
     fun serialize(entities: List<TrackableEntity>, trackables: List<Trackable>): String {
+        val sortedTrackables = trackables.sortedBy { it.title }
         val groupedTrackables = entities.groupBy { it.date }.toSortedMap()
         val csvText = groupedTrackables.map { (date, entities) ->
             var entry = format.format(date)
-            val pairedEntities = entities.map { entity ->
-                val associatedTrackable = trackables.firstOrNull { it.id == entity.trackableId }
-                if (associatedTrackable == null) {
-                    println("Woofers")
-                    throw RuntimeException("Blegh")
-                }
-                entity to associatedTrackable
-            }
-            val sortedEntities = pairedEntities.sortedBy { it.second.title }
-            sortedEntities.forEach { (entity, trackable) ->
-                val value = when (entity) {
-                    is TrackableEntity.Boolean -> entity.booleanEntity.executed.toString()
-                    is TrackableEntity.Number -> entity.numberEntity.count.toString()
-                    is TrackableEntity.Rating -> entity.ratingEntity.rating.serialized()
-                }
-                entry += ",${trackable.title},${value}"
+            sortedTrackables.forEach { trackable ->
+                val associatedEntity = entities.firstOrNull { it.trackableId == trackable.id }
+                val dataString = serializeEntity(trackable, associatedEntity)
+                entry += dataString
             }
             entry
         }.fold("") { acc, entity -> acc + entity + "\n" }
@@ -40,7 +26,7 @@ object TrackableSerializer {
     }
 
     fun deserialize(contents: String): Map<Trackable, List<TrackableEntity>> {
-        val trackableTitleMap = mutableMapOf<String, List<TrackableEntity>>()
+        val trackableTitleMap = mutableMapOf<String, List<TrackableEntity?>>()
         contents.trim().split("\n").map {
             val csvs = it.split(",")
             // First should be the date
@@ -57,7 +43,7 @@ object TrackableSerializer {
             }
         }
         val trackableMap = trackableTitleMap.mapKeys { (title, entries) ->
-            val type = when (entries[0]) {
+            val type = when (entries.firstNotNullOf { it }) {
                 is TrackableEntity.Boolean -> TrackableType.BOOLEAN
                 is TrackableEntity.Number -> TrackableType.NUMBER
                 is TrackableEntity.Rating -> TrackableType.RATING
@@ -65,8 +51,8 @@ object TrackableSerializer {
             Trackable(UUID.randomUUID().toString(), title, true, type)
         }
 
-        val returnMap = trackableMap.mapValues { (trackable, entites) ->
-            entites.map { entity ->
+        val returnMap = trackableMap.mapValues { (trackable, entities) ->
+            entities.filterNotNull().map { entity ->
                 when (entity) {
                     is TrackableEntity.Boolean -> TrackableEntity.Boolean(entity.booleanEntity.copy(trackableId = trackable.id))
                     is TrackableEntity.Number -> TrackableEntity.Number(entity.numberEntity.copy(trackableId = trackable.id))
@@ -77,16 +63,28 @@ object TrackableSerializer {
         return returnMap
     }
 
-    private fun constructEntity(data: String, date: Date): TrackableEntity {
+    private fun serializeEntity(trackable: Trackable, entity: TrackableEntity?): String {
+        return if (entity != null) {
+            val value = when (entity) {
+                is TrackableEntity.Boolean -> entity.booleanEntity.executed.toString()
+                is TrackableEntity.Number -> entity.numberEntity.count.toString()
+                is TrackableEntity.Rating -> entity.ratingEntity.rating.serialized()
+            }
+            ",${trackable.title},${value}"
+        } else {
+            ",${trackable.title},"
+        }
+    }
+
+    private fun constructEntity(data: String, date: Date): TrackableEntity? {
         val numberData = data.toIntOrNull()
         val rating = data.deserializeToRating()
+        val booleanData = data.toBooleanStrictOrNull()
         return when {
             numberData != null -> TrackableEntity.Number(NumberTrackableEntity("", numberData, date))
             rating != null -> TrackableEntity.Rating(RatingTrackableEntity("", rating, date))
-            else -> {
-                val booleanData = data.toBooleanStrict()
-                TrackableEntity.Boolean(BooleanTrackableEntity("", booleanData, date))
-            }
+            booleanData != null -> TrackableEntity.Boolean(BooleanTrackableEntity("", booleanData, date))
+            else -> null
         }
     }
 

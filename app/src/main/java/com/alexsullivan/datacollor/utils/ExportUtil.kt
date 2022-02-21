@@ -20,7 +20,7 @@ class ExportUtil(private val activity: Activity) {
             val database = TrackableEntityDatabase.getDatabase(activity)
             val trackableManager = TrackableManager(database)
             val trackableEntities = trackableManager.getTrackableEntities()
-            val trackables = trackableManager.getTrackables()
+            val trackables = trackableManager.getEnabledTrackables()
             Log.d("Export", "Trackables: $trackables")
             val csvText = TrackableSerializer.serialize(trackableEntities, trackables)
 
