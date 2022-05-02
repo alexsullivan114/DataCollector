@@ -20,16 +20,18 @@ class PreviousDaysViewModel(
         set(value) {
             field = value
             viewModelScope.launch {
-                _dateFlow.emit(dateString(value))
+                val newUiState = _uiFlow.value.copy(
+                    date = dateString(value),
+                    disableNext = shouldDisableNext(value)
+                )
+                _uiFlow.emit(newUiState)
                 collectDisplayableEntitiesForDate()
             }
         }
 
-    private val _itemsFlow = MutableStateFlow(emptyList<DisplayableTrackableEntity>())
-    private val _dateFlow = MutableStateFlow(dateString(date))
     private val _triggerUpdateWidgetsFlow = Channel<Unit>()
-    val itemsFlow = _itemsFlow.asStateFlow()
-    val dateFlow = _dateFlow.asStateFlow()
+    private val _uiFlow = MutableStateFlow(initialUiState())
+    val uiFlow = _uiFlow.asStateFlow()
     val triggerUpdateWidgetFlow = _triggerUpdateWidgetsFlow.receiveAsFlow()
 
     private var displayableEntitiesJob: Job? = null
@@ -58,13 +60,22 @@ class PreviousDaysViewModel(
         }
     }
 
+    fun dateSelected(dateTimestamp: Long) {
+        val calendar = Calendar.getInstance()
+        calendar.time = Date(dateTimestamp)
+        calendar.set(Calendar.HOUR_OF_DAY, 0);
+        calendar.set(Calendar.MINUTE, 0);
+        calendar.set(Calendar.SECOND, 0);
+        calendar.set(Calendar.MILLISECOND, 0);
+        calendar.add(Calendar.DATE, 1)
+        date = calendar.time
+    }
+
     fun nextDayPressed() {
         val calendar = Calendar.getInstance()
         calendar.time = date
         calendar.add(Calendar.DATE, 1)
-        if (calendar.time.before(Date())) {
-            date = calendar.time
-        }
+        date = calendar.time
     }
 
     fun previousDayPressed() {
@@ -98,6 +109,10 @@ class PreviousDaysViewModel(
             _triggerUpdateWidgetsFlow.send(Unit)
         }
 
+    fun getDate(): Date {
+       return date
+    }
+
     private fun dateString(date: Date): String {
         val formatter = SimpleDateFormat.getDateInstance()
         return formatter.format(date)
@@ -118,7 +133,32 @@ class PreviousDaysViewModel(
         val displayableEntitiesFlow = displayableEntitiesForDateFlow(date)
         displayableEntitiesJob?.cancel()
         displayableEntitiesJob = viewModelScope.launch {
-            displayableEntitiesFlow.collect { _itemsFlow.emit(it) }
+            displayableEntitiesFlow.collect {
+                val updatedPreviousDaysUi = _uiFlow.value.copy(items = it)
+                _uiFlow.emit(updatedPreviousDaysUi)
+            }
         }
     }
+
+    private fun shouldDisableNext(date: Date): Boolean {
+        val calendar = Calendar.getInstance()
+        val today = Date()
+        calendar.time = today
+        val todayDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
+        calendar.time = date
+        val dateDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
+        return dateDayOfYear >= todayDayOfYear
+    }
+
+    private fun initialUiState() = UiState(
+        date = dateString(date),
+        items = emptyList(),
+        disableNext = shouldDisableNext(date),
+    )
+
+    data class UiState(
+        val date: String,
+        val items: List<DisplayableTrackableEntity>,
+        val disableNext: Boolean,
+    )
 }

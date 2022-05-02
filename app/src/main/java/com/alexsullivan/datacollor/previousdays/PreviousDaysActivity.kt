@@ -4,12 +4,12 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.GridCells
-import androidx.compose.foundation.lazy.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -37,14 +37,16 @@ import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.utils.refreshWidget
-import kotlinx.coroutines.flow.collect
+import com.google.android.material.datepicker.CalendarConstraints
+import com.google.android.material.datepicker.DateValidatorPointBackward
+import com.google.android.material.datepicker.MaterialDatePicker
 import kotlinx.coroutines.launch
 
 class PreviousDaysActivity : AppCompatActivity() {
 
     private val viewModel: PreviousDaysViewModel by viewModels {
         object: ViewModelProvider.Factory {
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val database = TrackableEntityDatabase.getDatabase(this@PreviousDaysActivity)
                 val manager = TrackableManager(database)
                 return PreviousDaysViewModel(manager) as T
@@ -74,7 +76,7 @@ class PreviousDaysActivity : AppCompatActivity() {
 
     @Composable
     private fun QLAppBar() {
-        val dateText by viewModel.dateFlow.collectAsState()
+        val uiState by viewModel.uiFlow.collectAsState()
         TopAppBar {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -84,23 +86,25 @@ class PreviousDaysActivity : AppCompatActivity() {
                 IconButton(onClick = viewModel::previousDayPressed) {
                     Icon(Icons.Filled.ArrowBack, "Previous Day")
                 }
-                Text(dateText, style = MaterialTheme.typography.h6)
-                IconButton(onClick = viewModel::nextDayPressed) {
+                Text(
+                    uiState.date,
+                    style = MaterialTheme.typography.h6,
+                    modifier = Modifier.clickable { showDatePicker() })
+                IconButton(onClick = viewModel::nextDayPressed, enabled = !uiState.disableNext) {
                     Icon(Icons.Filled.ArrowForward, "Next Day")
                 }
             }
         }
     }
 
-    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     private fun TrackableEntitiesList() {
-        val entities by viewModel.itemsFlow.collectAsState()
+        val uiState by viewModel.uiFlow.collectAsState()
         LazyVerticalGrid(
+            columns = GridCells.Adaptive(100.dp),
             modifier = Modifier.fillMaxWidth(),
-            cells = GridCells.Adaptive(100.dp),
         ) {
-            entities.forEach { entity ->
+            uiState.items.forEach { entity ->
                 item {
                     Box(modifier = Modifier.padding(12.dp), contentAlignment = Alignment.Center) {
                         EntityView(entity)
@@ -176,5 +180,17 @@ class PreviousDaysActivity : AppCompatActivity() {
                 .background(colorResource(id = colorRes), shape = RoundedCornerShape(cornerRadius))
                 .border(1.dp, Color.Black, shape = RoundedCornerShape(cornerRadius))
         )
+    }
+
+    private fun showDatePicker() {
+        val calendarConstraints = CalendarConstraints.Builder()
+            .setValidator(DateValidatorPointBackward.now())
+            .setOpenAt(viewModel.getDate().time)
+            .build()
+        val dialog = MaterialDatePicker.Builder.datePicker()
+            .setCalendarConstraints(calendarConstraints)
+            .build()
+        dialog.addOnPositiveButtonClickListener(viewModel::dateSelected)
+        dialog.show(supportFragmentManager, "DatePicker")
     }
 }

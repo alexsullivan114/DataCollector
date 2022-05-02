@@ -53,7 +53,6 @@ abstract class TrackableEntityDatabase : RoomDatabase() {
         @Volatile
         private var INSTANCE: TrackableEntityDatabase? = null
 
-        @DelicateCoroutinesApi
         fun getDatabase(context: Context): TrackableEntityDatabase {
             val tempInstance = INSTANCE
             if (tempInstance != null) {

@@ -1,5 +1,7 @@
 package com.alexsullivan.datacollor.utils
 
+import java.time.Instant
+import java.time.LocalDateTime
 import java.util.*
 
 fun midnight(): Date {

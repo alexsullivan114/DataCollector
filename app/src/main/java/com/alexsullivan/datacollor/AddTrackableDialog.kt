@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.toLowerCase
@@ -60,7 +61,9 @@ private fun TrackableTypeOptions(
                 modifier = Modifier
                     .padding(bottom = 16.dp)
                     .fillMaxWidth()
-                    .clickable { onTypeSelected(trackableType) }) {
+                    .clickable { onTypeSelected(trackableType) },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 val typeTitle = trackableType.name.lowercase().replaceFirstChar {
                     it.titlecase(Locale.getDefault())
                 }

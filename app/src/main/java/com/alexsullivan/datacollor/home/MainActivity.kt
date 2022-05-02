@@ -14,19 +14,18 @@ import androidx.lifecycle.*
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
-import android.appwidget.AppWidgetManager
-import android.content.ComponentName
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -51,7 +50,7 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels {
         object: ViewModelProvider.Factory {
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val database = TrackableEntityDatabase.getDatabase(this@MainActivity)
                 val manager = TrackableManager(database)
                 val updateUseCase = UpdateTrackablesUseCase(manager)
@@ -101,24 +100,29 @@ class MainActivity : AppCompatActivity() {
 
     @Composable
     fun Screen(modifier: Modifier = Modifier) {
-        val showDialog = remember { mutableStateOf(false) }
+        val showAddDialog = remember { mutableStateOf(false) }
+        val showDeleteDialog = remember { mutableStateOf<Trackable?>(null) }
         AppTheme {
             Scaffold(
                 topBar = { QLAppBar() },
                 floatingActionButton = {
-                    FloatingActionButton(onClick = { showDialog.value = true }) {
+                    FloatingActionButton(onClick = { showAddDialog.value = true }) {
                         Icon(Icons.Filled.Add, "Add")
                     }
                 }
             ) {
-                TrackableItemList(modifier = modifier, showDialog)
+                TrackableItemList(modifier = modifier, showAddDialog, showDeleteDialog)
             }
 
         }
     }
 
     @Composable
-    fun TrackableItemList(modifier: Modifier, showDialog: MutableState<Boolean>) {
+    fun TrackableItemList(
+        modifier: Modifier,
+        showAddDialog: MutableState<Boolean>,
+        showDeleteDialog: MutableState<Trackable?>
+    ) {
         val trackables by viewModel.itemsFlow.collectAsState()
         LazyColumn(
             modifier = modifier.fillMaxWidth(),
@@ -134,32 +138,33 @@ class MainActivity : AppCompatActivity() {
             }
             trackables.sortedBy { it.title }.forEach { trackable ->
                 item(key = trackable.id) {
-                    val dismissState = rememberDismissState()
-                    val isDismissed =
-                        dismissState.isDismissed(DismissDirection.EndToStart) ||
-                                dismissState.isDismissed(DismissDirection.StartToEnd)
-                    if (isDismissed) {
-                        viewModel.trackableDeleted(trackable)
-                    }
-                    SwipeToDismiss(
-                        state = dismissState,
-                        background = { Box(modifier = Modifier.background(Color.Red)) }) {
-                        TrackableItem(trackable)
-                    }
+                    TrackableItem(trackable, modifier = Modifier.pointerInput(Unit) {
+                        detectTapGestures(onLongPress = {
+                            showDeleteDialog.value = trackable
+                        })
+                    })
                 }
             }
             item {
                 ExportButton()
             }
         }
-        if (showDialog.value) {
+        if (showAddDialog.value) {
             AddTrackableDialog(
-                onDismiss = { showDialog.value = false },
+                onDismiss = { showAddDialog.value = false },
                 onDone = {
-                    showDialog.value = false
+                    showAddDialog.value = false
                     viewModel.trackableAdded(it)
                 }
             )
+        }
+        showDeleteDialog.value?.let { trackable ->
+            DeleteTrackableDialog(onDelete = {
+                showDeleteDialog.value = null
+                viewModel.trackableDeleted(it)
+            }, onCancel = {
+                showDeleteDialog.value = null
+            }, trackable = trackable)
         }
     }
 
