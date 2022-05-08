@@ -4,6 +4,8 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
+import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
 import kotlinx.coroutines.flow.Flow
 import java.time.OffsetDateTime
@@ -27,4 +29,7 @@ interface RatingEntityDao {
 
     @Query("DELETE FROM rating_trackable_entity_table WHERE trackableId = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT * FROM rating_trackable_entity_table WHERE trackableId = :id")
+    suspend fun getEntities(id: String): List<RatingTrackableEntity>
 }

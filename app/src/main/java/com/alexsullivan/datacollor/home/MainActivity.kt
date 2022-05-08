@@ -36,6 +36,7 @@ import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
+import com.alexsullivan.datacollor.insights.InsightsActivity
 import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
 import com.alexsullivan.datacollor.utils.ExportUtil
 import com.alexsullivan.datacollor.utils.refreshWidget
@@ -141,6 +142,13 @@ class MainActivity : AppCompatActivity() {
                     TrackableItem(trackable, modifier = Modifier.pointerInput(Unit) {
                         detectTapGestures(onLongPress = {
                             showDeleteDialog.value = trackable
+                        }, onTap = {
+                            startActivity(
+                                InsightsActivity.getIntent(
+                                    trackable.id,
+                                    this@MainActivity
+                                )
+                            )
                         })
                     })
                 }

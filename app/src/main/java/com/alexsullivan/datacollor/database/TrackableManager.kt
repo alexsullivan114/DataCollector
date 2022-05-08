@@ -142,4 +142,27 @@ class TrackableManager(database: TrackableEntityDatabase) {
         val ratingEntities = ratingDao.getEntities(midnight()).map { TrackableEntity.Rating(it) }
         return booleanEntities + numberEntities + ratingEntities
     }
+
+    suspend fun getTrackable(id: String): Trackable? {
+        return trackableDao.getTrackableById(id)
+    }
+
+    suspend fun getTrackableEntities(trackableId: String): List<TrackableEntity> {
+        val booleanEntities = booleanDao.getEntities(trackableId).map { TrackableEntity.Boolean(it) }
+        val numberEntities = numberDao.getEntities(trackableId).map { TrackableEntity.Number(it) }
+        val ratingEntities = ratingDao.getEntities(trackableId).map { TrackableEntity.Rating(it) }
+        return booleanEntities + numberEntities + ratingEntities
+    }
+
+    suspend fun getBooleanEntities(trackableId: String): List<BooleanTrackableEntity> {
+        return booleanDao.getEntities(trackableId)
+    }
+
+    suspend fun getNumberEntities(trackableId: String): List<NumberTrackableEntity> {
+        return numberDao.getEntities(trackableId)
+    }
+
+    suspend fun getRatingEntities(trackableId: String): List<RatingTrackableEntity> {
+        return ratingDao.getEntities(trackableId)
+    }
 }

@@ -27,4 +27,7 @@ interface NumberEntityDao {
 
     @Query("DELETE FROM number_trackable_entity_table WHERE trackableId = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT * FROM number_trackable_entity_table WHERE trackableId = :id")
+    suspend fun getEntities(id: String): List<NumberTrackableEntity>
 }
