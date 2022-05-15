@@ -1,14 +1,13 @@
 package com.alexsullivan.datacollor.utils
 
-import java.time.Instant
-import java.time.LocalDateTime
-import java.util.*
+import java.time.LocalTime
+import java.time.OffsetDateTime
 
-fun midnight(): Date {
-    val calendar: Calendar = GregorianCalendar()
-    calendar[Calendar.HOUR_OF_DAY] = 0
-    calendar[Calendar.MINUTE] = 0
-    calendar[Calendar.SECOND] = 0
-    calendar[Calendar.MILLISECOND] = 0
-    return calendar.time
+fun midnight(): OffsetDateTime {
+    return OffsetDateTime.now().with(LocalTime.MIDNIGHT)
 }
+
+val OffsetDateTime.midnight: OffsetDateTime
+    get() {
+        return with(LocalTime.MIDNIGHT)
+    }

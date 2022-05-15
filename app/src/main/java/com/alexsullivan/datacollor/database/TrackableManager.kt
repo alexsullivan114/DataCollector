@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.util.*
+import java.time.OffsetDateTime
 import kotlin.math.max
 
 class TrackableManager(database: TrackableEntityDatabase) {
@@ -45,7 +45,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun toggle(trackable: Trackable, date: Date = midnight()) {
+    suspend fun toggle(trackable: Trackable, date: OffsetDateTime = midnight()) {
         println("Date: $date")
         println("Trackable: $trackable")
         val entity = booleanDao.getEntity(date, trackable.id)
@@ -55,7 +55,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun updateCount(trackable: Trackable, increment: Boolean, date: Date = midnight()) {
+    suspend fun updateCount(trackable: Trackable, increment: Boolean, date: OffsetDateTime = midnight()) {
         val entity = numberDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val newCount = if (increment) entity.count + 1 else max(0, entity.count - 1)
@@ -64,7 +64,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun updateRating(trackable: Trackable, increment: Boolean, date: Date = midnight()) {
+    suspend fun updateRating(trackable: Trackable, increment: Boolean, date: OffsetDateTime = midnight()) {
         val entity = ratingDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val newRating = if (increment) entity.rating.increment() else entity.rating.decrement()
@@ -107,7 +107,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         return trackableDao.getTrackablesFlow()
     }
 
-    fun getTrackableEntitiesByDateFlow(date: Date): Flow<List<TrackableEntity>> {
+    fun getTrackableEntitiesByDateFlow(date: OffsetDateTime): Flow<List<TrackableEntity>> {
         val booleansFlow = booleanDao.getEntitiesFlow(date).map { entitiesList ->
             entitiesList.map { TrackableEntity.Boolean(it) }
         }

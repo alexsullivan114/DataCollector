@@ -11,13 +11,12 @@ import com.alexsullivan.datacollor.database.daos.TrackableDao
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
 @Database(
-    version = 6,
+    version = 7,
     entities = [
         BooleanTrackableEntity::class,
         NumberTrackableEntity::class,
@@ -64,6 +63,7 @@ abstract class TrackableEntityDatabase : RoomDatabase() {
                     TrackableEntityDatabase::class.java,
                     "sqlite.db"
                 )
+                    .fallbackToDestructiveMigration()
                     .addMigrations(ThreeToFourManualMigration())
                     .addCallback(object: RoomDatabase.Callback() {
                         override fun onCreate(db: SupportSQLiteDatabase) {

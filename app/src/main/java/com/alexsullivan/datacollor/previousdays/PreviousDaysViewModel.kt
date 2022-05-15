@@ -9,14 +9,15 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
+import java.time.*
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 class PreviousDaysViewModel(
     private val trackableManager: TrackableManager,
 ): ViewModel() {
 
-    private var date: Date = midnight()
+    private var date: OffsetDateTime = midnight()
         set(value) {
             field = value
             viewModelScope.launch {
@@ -61,28 +62,24 @@ class PreviousDaysViewModel(
     }
 
     fun dateSelected(dateTimestamp: Long) {
-        val calendar = Calendar.getInstance()
-        calendar.time = Date(dateTimestamp)
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
-        calendar.add(Calendar.DATE, 1)
-        date = calendar.time
+        val offsetDateTime = OffsetDateTime.ofInstant(
+            Instant.ofEpochMilli(dateTimestamp),
+            ZoneId.of("UTC")
+        )
+        val currentOffset = OffsetDateTime.now().offset
+        date = OffsetDateTime.of(
+            offsetDateTime.toLocalDate(),
+            LocalTime.MIDNIGHT,
+            currentOffset
+        ).midnight
     }
 
     fun nextDayPressed() {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        calendar.add(Calendar.DATE, 1)
-        date = calendar.time
+        date = date.plusDays(1)
     }
 
     fun previousDayPressed() {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        calendar.add(Calendar.DATE, -1)
-        date = calendar.time
+        date = date.minusDays(1)
     }
 
     fun booleanEntityChanged(entity: DisplayableTrackableEntity.BooleanEntity) =
@@ -109,16 +106,15 @@ class PreviousDaysViewModel(
             _triggerUpdateWidgetsFlow.send(Unit)
         }
 
-    fun getDate(): Date {
+    fun getDate(): OffsetDateTime {
        return date
     }
 
-    private fun dateString(date: Date): String {
-        val formatter = SimpleDateFormat.getDateInstance()
-        return formatter.format(date)
+    private fun dateString(date: OffsetDateTime): String {
+        return date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL))
     }
 
-    private suspend fun displayableEntitiesForDateFlow(date: Date): Flow<List<DisplayableTrackableEntity>> {
+    private suspend fun displayableEntitiesForDateFlow(date: OffsetDateTime): Flow<List<DisplayableTrackableEntity>> {
         val trackables = trackableManager.getTrackables()
         return trackableManager.getTrackableEntitiesByDateFlow(date)
             .map { entities ->
@@ -140,14 +136,8 @@ class PreviousDaysViewModel(
         }
     }
 
-    private fun shouldDisableNext(date: Date): Boolean {
-        val calendar = Calendar.getInstance()
-        val today = Date()
-        calendar.time = today
-        val todayDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-        calendar.time = date
-        val dateDayOfYear = calendar.get(Calendar.DAY_OF_YEAR)
-        return dateDayOfYear >= todayDayOfYear
+    private fun shouldDisableNext(date: OffsetDateTime): Boolean {
+        return date.toLocalDate().isEqual(LocalDate.now())
     }
 
     private fun initialUiState() = UiState(

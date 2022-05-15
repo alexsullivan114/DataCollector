@@ -2,17 +2,18 @@ package com.alexsullivan.datacollor.database
 
 import androidx.room.TypeConverter
 import com.alexsullivan.datacollor.database.entities.Rating
-import java.util.*
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
 
 class Converters {
     @TypeConverter
-    fun fromTimestamp(value: Long?): Date? {
-        return value?.let { Date(it) }
+    fun fromOffsetTime(value: OffsetDateTime): String {
+        return value.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
     }
 
     @TypeConverter
-    fun dateToTimestamp(date: Date?): Long? {
-        return date?.time
+    fun toOffsetTime(value: String): OffsetDateTime {
+        return OffsetDateTime.parse(value)
     }
 
     @TypeConverter

@@ -1,6 +1,6 @@
 package com.alexsullivan.datacollor.database.entities
 
-import java.util.*
+import java.time.OffsetDateTime
 
 sealed class TrackableEntity {
     val trackableId: String
@@ -9,7 +9,7 @@ sealed class TrackableEntity {
             is Number -> numberEntity.trackableId
             is Rating -> ratingEntity.trackableId
         }
-    val date: Date
+    val date: OffsetDateTime
         get() = when (this) {
             is Boolean -> booleanEntity.date
             is Number -> numberEntity.date

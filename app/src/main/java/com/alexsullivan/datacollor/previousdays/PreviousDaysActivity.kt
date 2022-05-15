@@ -185,12 +185,14 @@ class PreviousDaysActivity : AppCompatActivity() {
     private fun showDatePicker() {
         val calendarConstraints = CalendarConstraints.Builder()
             .setValidator(DateValidatorPointBackward.now())
-            .setOpenAt(viewModel.getDate().time)
+            .setOpenAt(viewModel.getDate().toInstant().toEpochMilli())
             .build()
         val dialog = MaterialDatePicker.Builder.datePicker()
             .setCalendarConstraints(calendarConstraints)
             .build()
-        dialog.addOnPositiveButtonClickListener(viewModel::dateSelected)
+        dialog.addOnPositiveButtonClickListener {
+            viewModel.dateSelected(it)
+        }
         dialog.show(supportFragmentManager, "DatePicker")
     }
 }

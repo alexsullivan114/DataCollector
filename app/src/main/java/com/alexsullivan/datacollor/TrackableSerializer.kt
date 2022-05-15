@@ -1,20 +1,25 @@
 package com.alexsullivan.datacollor
 
 import android.annotation.SuppressLint
-import com.alexsullivan.datacollor.database.*
+import com.alexsullivan.datacollor.database.Trackable
+import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.*
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.OffsetDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import java.util.*
 
 object TrackableSerializer {
-    @SuppressLint("SimpleDateFormat")
-    private val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
 
     fun serialize(entities: List<TrackableEntity>, trackables: List<Trackable>): String {
         val sortedTrackables = trackables.sortedBy { it.title }
+        // TODO: Check to see that this is correct
         val groupedTrackables = entities.groupBy { it.date }.toSortedMap()
         val csvText = groupedTrackables.map { (date, entities) ->
-            var entry = format.format(date)
+            var entry = date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             sortedTrackables.forEach { trackable ->
                 val associatedEntity = entities.firstOrNull { it.trackableId == trackable.id }
                 val dataString = serializeEntity(trackable, associatedEntity)
@@ -30,7 +35,7 @@ object TrackableSerializer {
         contents.trim().split("\n").map {
             val csvs = it.split(",")
             // First should be the date
-            val date = format.parse(csvs[0])!!
+            val date = parseDate(csvs[0])
             // Then pairs of Trackable -> some type
             val trackablePairStrings = csvs.subList(1, csvs.size)
             for (i in 0 until trackablePairStrings.lastIndex step 2) {
@@ -76,7 +81,7 @@ object TrackableSerializer {
         }
     }
 
-    private fun constructEntity(data: String, date: Date): TrackableEntity? {
+    private fun constructEntity(data: String, date: OffsetDateTime): TrackableEntity? {
         val numberData = data.toIntOrNull()
         val rating = data.deserializeToRating()
         val booleanData = data.toBooleanStrictOrNull()
@@ -99,5 +104,17 @@ object TrackableSerializer {
             rating.name.lowercase() == this.lowercase()
         }
         return rating
+    }
+
+    @SuppressLint("SimpleDateFormat")
+    private fun parseDate(dateString: String): OffsetDateTime {
+        return try {
+            OffsetDateTime.parse(dateString)
+        } catch (exception: DateTimeParseException) {
+            // We're probably in old date land.
+            val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+            val date = format.parse(dateString)!!
+            OffsetDateTime.ofInstant(Instant.ofEpochMilli(date.time), ZoneId.systemDefault())
+        }
     }
 }

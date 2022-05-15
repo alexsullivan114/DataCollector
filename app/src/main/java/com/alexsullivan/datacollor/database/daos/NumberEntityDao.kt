@@ -4,10 +4,9 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import kotlinx.coroutines.flow.Flow
-import java.util.*
+import java.time.OffsetDateTime
 
 @Dao
 interface NumberEntityDao {
@@ -15,16 +14,16 @@ interface NumberEntityDao {
     suspend fun save(entity: NumberTrackableEntity)
 
     @Query("SELECT * FROM number_trackable_entity_table WHERE date = :date AND trackableId = :id LIMIT 1")
-    suspend fun getEntity(date: Date, id: String): NumberTrackableEntity
+    suspend fun getEntity(date: OffsetDateTime, id: String): NumberTrackableEntity
 
     @Query("SELECT * FROM number_trackable_entity_table")
     suspend fun getEntities(): List<NumberTrackableEntity>
 
     @Query("SELECT * FROM number_trackable_entity_table WHERE date = :date")
-    suspend fun getEntities(date: Date): List<NumberTrackableEntity>
+    suspend fun getEntities(date: OffsetDateTime): List<NumberTrackableEntity>
 
     @Query("SELECT * FROM number_trackable_entity_table WHERE date = :date")
-    fun getEntitiesFlow(date: Date): Flow<List<NumberTrackableEntity>>
+    fun getEntitiesFlow(date: OffsetDateTime): Flow<List<NumberTrackableEntity>>
 
     @Query("DELETE FROM number_trackable_entity_table WHERE trackableId = :id")
     suspend fun delete(id: String)
