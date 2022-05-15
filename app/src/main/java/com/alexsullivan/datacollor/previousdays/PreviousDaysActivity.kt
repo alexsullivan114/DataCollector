@@ -4,12 +4,15 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.GridCells
+import androidx.compose.foundation.lazy.LazyVerticalGrid
+//import androidx.compose.foundation.lazy.grid.GridCells
+//import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
@@ -40,6 +43,7 @@ import com.alexsullivan.datacollor.utils.refreshWidget
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class PreviousDaysActivity : AppCompatActivity() {
@@ -97,11 +101,12 @@ class PreviousDaysActivity : AppCompatActivity() {
         }
     }
 
+    @OptIn(ExperimentalFoundationApi::class)
     @Composable
     private fun TrackableEntitiesList() {
         val uiState by viewModel.uiFlow.collectAsState()
         LazyVerticalGrid(
-            columns = GridCells.Adaptive(100.dp),
+            cells = GridCells.Fixed(3),
             modifier = Modifier.fillMaxWidth(),
         ) {
             uiState.items.forEach { entity ->

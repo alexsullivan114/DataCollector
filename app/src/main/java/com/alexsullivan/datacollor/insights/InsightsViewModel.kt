@@ -4,10 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalDateTime
 
 class InsightsViewModel(
@@ -27,15 +29,27 @@ class InsightsViewModel(
         val trackable = trackableManager.getTrackable(id)
             ?: throw IllegalStateException("Can't find trackable with id $id")
         val entities = trackableManager.getBooleanEntities(id).sortedBy { it.date }
-        val totalCount = entities.count { it.executed }
 
+        val totalCount = getTotalCount(entities)
+        val yearStartCount = getYearStartCount(entities)
+        val dates = getToggledDates(entities)
+        return UiState.BooleanUiState(trackable.title, totalCount, yearStartCount, dates)
+    }
+
+    private fun getToggledDates(entities: List<BooleanTrackableEntity>): List<LocalDate> {
+        return entities.filter { it.executed }.map { it.date.toLocalDate() }
+    }
+
+    private fun getTotalCount(entities: List<BooleanTrackableEntity>): Int {
+        return entities.count { it.executed }
+    }
+
+    private fun getYearStartCount(entities: List<BooleanTrackableEntity>): Int {
         val thisYear = LocalDateTime.now().year
-        val yearStartCount = entities.count {
+        return entities.count {
             val entityYear = it.date.year
             (entityYear == thisYear) && it.executed
         }
-
-        return UiState.BooleanUiState(trackable.title, totalCount, yearStartCount)
     }
 
     private suspend fun getTrackableEntitiesForTrackable(trackable: Trackable): List<TrackableEntity> {
@@ -46,7 +60,8 @@ class InsightsViewModel(
         data class BooleanUiState(
             val trackableTitle: String,
             val totalCount: Int,
-            val yearStartCount: Int
+            val yearStartCount: Int,
+            val daysToggled: List<LocalDate>
         ) : UiState()
     }
 }
