@@ -53,6 +53,18 @@ fun BooleanUi(state: BooleanUiState) {
             fontSize = 18.sp,
             modifier = Modifier.padding(16.dp)
         )
+        Text(
+            text = buildAnnotatedString {
+                append("On average, you toggle ${state.trackableTitle}")
+                withStyle(style = SpanStyle(color = Color.Blue)) {
+                    append(" %.2f ".format(state.perWeekCount))
+                }
+                append("times per week.")
+            },
+            lineHeight = 30.sp,
+            fontSize = 18.sp,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 

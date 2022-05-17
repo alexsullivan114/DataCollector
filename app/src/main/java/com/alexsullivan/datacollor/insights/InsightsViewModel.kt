@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.OffsetDateTime
+import java.time.temporal.ChronoUnit
 
 class InsightsViewModel(
     private val trackableId: String,
@@ -32,8 +34,19 @@ class InsightsViewModel(
 
         val totalCount = getTotalCount(entities)
         val yearStartCount = getYearStartCount(entities)
+        val perWeekCount = getPerWeekCount(entities)
         val dates = getToggledDates(entities)
-        return UiState.BooleanUiState(trackable.title, totalCount, yearStartCount, dates)
+        return UiState.BooleanUiState(trackable.title, totalCount, yearStartCount, perWeekCount, dates)
+    }
+
+    private fun getPerWeekCount(entities: List<BooleanTrackableEntity>): Float {
+        if (entities.isEmpty()) {
+            return 0f
+        }
+        val sortedEntities = entities.sortedBy { it.date }
+        val executedCount = sortedEntities.count { it.executed }
+        val weeksBetween = ChronoUnit.WEEKS.between(sortedEntities.first().date, OffsetDateTime.now())
+        return executedCount.toFloat() / weeksBetween
     }
 
     private fun getToggledDates(entities: List<BooleanTrackableEntity>): List<LocalDate> {
@@ -61,6 +74,7 @@ class InsightsViewModel(
             val trackableTitle: String,
             val totalCount: Int,
             val yearStartCount: Int,
+            val perWeekCount: Float,
             val daysToggled: List<LocalDate>
         ) : UiState()
     }
