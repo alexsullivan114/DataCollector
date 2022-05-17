@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -23,14 +24,29 @@ class InsightsViewModel(
 
     init {
         viewModelScope.launch {
-            _uiFlow.emit(getBooleanUiState(trackableId))
+            val trackable = trackableManager.getTrackable(trackableId)
+                ?: throw IllegalStateException("Can't find trackable with id $trackableId")
+            val state = when (trackable.type) {
+                TrackableType.BOOLEAN -> getBooleanUiState(trackable)
+                TrackableType.NUMBER -> getNumericUiState(trackable)
+                TrackableType.RATING -> getRatingUiState(trackable)
+            }
+            _uiFlow.emit(state)
         }
     }
 
-    private suspend fun getBooleanUiState(id: String): UiState.BooleanUiState {
-        val trackable = trackableManager.getTrackable(id)
-            ?: throw IllegalStateException("Can't find trackable with id $id")
-        val entities = trackableManager.getBooleanEntities(id).sortedBy { it.date }
+    private suspend fun getRatingUiState(trackable: Trackable): UiState.RatingUiState {
+        TODO()
+    }
+
+    private suspend fun getNumericUiState(trackable: Trackable): UiState.NumericUiState {
+        val entities = trackableManager.getNumberEntities(trackableId).sortedBy { it.date }
+        val datePairs = entities.map { it.date.toLocalDate() to it.count }
+        return UiState.NumericUiState(datePairs)
+    }
+
+    private suspend fun getBooleanUiState(trackable: Trackable): UiState.BooleanUiState {
+        val entities = trackableManager.getBooleanEntities(trackableId).sortedBy { it.date }
 
         val totalCount = getTotalCount(entities)
         val yearStartCount = getYearStartCount(entities)
@@ -77,5 +93,11 @@ class InsightsViewModel(
             val perWeekCount: Float,
             val daysToggled: List<LocalDate>
         ) : UiState()
+
+        data class NumericUiState(
+            val dateCounts: List<Pair<LocalDate, Int>>
+        ) : UiState()
+
+        object RatingUiState : UiState()
     }
 }
