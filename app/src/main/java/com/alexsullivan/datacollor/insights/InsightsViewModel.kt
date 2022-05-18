@@ -6,7 +6,10 @@ import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
+import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
+import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.BooleanUiState
+import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.NumericUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -39,20 +42,45 @@ class InsightsViewModel(
         TODO()
     }
 
-    private suspend fun getNumericUiState(trackable: Trackable): UiState.NumericUiState {
+    private suspend fun getNumericUiState(trackable: Trackable): NumericUiState {
         val entities = trackableManager.getNumberEntities(trackableId).sortedBy { it.date }
         val datePairs = entities.map { it.date.toLocalDate() to it.count }
-        return UiState.NumericUiState(datePairs)
+        val totalCount = entities.sumOf { it.count }
+        val yearStartCount = getNumericYearStartCount(entities)
+        val perWeekCount = getNumericPerWeekCount(entities)
+        return NumericUiState(trackable.title, totalCount, yearStartCount, perWeekCount, datePairs)
     }
 
-    private suspend fun getBooleanUiState(trackable: Trackable): UiState.BooleanUiState {
+    private fun getNumericPerWeekCount(entities: List<NumberTrackableEntity>): Float {
+        if (entities.isEmpty()) {
+            return 0f
+        }
+        val sortedEntities = entities.sortedBy { it.date }
+        val totalCount = entities.sumOf { it.count }
+        val weeksBetween = ChronoUnit.WEEKS.between(sortedEntities.first().date, OffsetDateTime.now())
+        return totalCount.toFloat() / weeksBetween
+    }
+
+    private fun getNumericYearStartCount(entities: List<NumberTrackableEntity>): Int {
+        val thisYear = LocalDateTime.now().year
+        return entities.sumOf {
+            val entityYear = it.date.year
+            if (entityYear == thisYear) {
+                it.count
+            } else {
+                0
+            }
+        }
+    }
+
+    private suspend fun getBooleanUiState(trackable: Trackable): BooleanUiState {
         val entities = trackableManager.getBooleanEntities(trackableId).sortedBy { it.date }
 
         val totalCount = getTotalCount(entities)
         val yearStartCount = getYearStartCount(entities)
         val perWeekCount = getPerWeekCount(entities)
         val dates = getToggledDates(entities)
-        return UiState.BooleanUiState(trackable.title, totalCount, yearStartCount, perWeekCount, dates)
+        return BooleanUiState(trackable.title, totalCount, yearStartCount, perWeekCount, dates)
     }
 
     private fun getPerWeekCount(entities: List<BooleanTrackableEntity>): Float {
@@ -95,6 +123,10 @@ class InsightsViewModel(
         ) : UiState()
 
         data class NumericUiState(
+            val trackableTitle: String,
+            val totalCount: Int,
+            val yearStartCount: Int,
+            val perWeekCount: Float,
             val dateCounts: List<Pair<LocalDate, Int>>
         ) : UiState()
 
