@@ -48,7 +48,7 @@ class InsightsActivity : AppCompatActivity() {
                 when (val state = uiState.value) {
                     is InsightsViewModel.UiState.BooleanUiState -> BooleanUi(state)
                     is InsightsViewModel.UiState.NumericUiState -> NumericUi(state)
-                    InsightsViewModel.UiState.RatingUiState -> TODO()
+                    is InsightsViewModel.UiState.RatingUiState -> RatingUi(state)
                     null -> {}
                 }
             }

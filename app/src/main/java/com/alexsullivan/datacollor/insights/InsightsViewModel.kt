@@ -7,16 +7,19 @@ import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
+import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
-import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.BooleanUiState
-import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.NumericUiState
+import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
+import kotlin.math.ceil
+import kotlin.math.floor
 
 class InsightsViewModel(
     private val trackableId: String,
@@ -38,8 +41,26 @@ class InsightsViewModel(
         }
     }
 
-    private suspend fun getRatingUiState(trackable: Trackable): UiState.RatingUiState {
-        TODO()
+    private suspend fun getRatingUiState(trackable: Trackable): RatingUiState {
+        val entities = trackableManager.getRatingEntities(trackableId).sortedBy { it.date }
+        val datePairs = entities.map { it.date.toLocalDate() to it.rating }
+        val dayAverages = entities.groupBy { it.date.dayOfWeek }.mapValues { (dayOfWeek, entities) ->
+            val averageEntitiesRating = (entities.sumOf { it.rating.value }) / entities.size.toFloat()
+            averageEntitiesRating
+        }
+        val maxRatedDay = dayAverages.maxByOrNull { it.value }!!.key
+        val minRatedDay = dayAverages.minByOrNull { it.value }!!.key
+        val averageDayValue = (entities.sumOf { it.rating.value }) / entities.size.toFloat()
+        val averageDayBound = Rating.fromValue(floor(averageDayValue).toInt()) to Rating.fromValue(
+            ceil(averageDayValue).toInt()
+        )
+        return RatingUiState(
+            trackableTitle = trackable.title,
+            lowestRatedDay = minRatedDay,
+            highestRatedDay = maxRatedDay,
+            averageRatingBound = averageDayBound,
+            dateRatings = datePairs
+        )
     }
 
     private suspend fun getNumericUiState(trackable: Trackable): NumericUiState {
@@ -130,6 +151,12 @@ class InsightsViewModel(
             val dateCounts: List<Pair<LocalDate, Int>>
         ) : UiState()
 
-        object RatingUiState : UiState()
+        data class RatingUiState(
+            val trackableTitle: String,
+            val lowestRatedDay: DayOfWeek,
+            val highestRatedDay: DayOfWeek,
+            val averageRatingBound: Pair<Rating, Rating>,
+            val dateRatings: List<Pair<LocalDate, Rating>>
+        ) : UiState()
     }
 }

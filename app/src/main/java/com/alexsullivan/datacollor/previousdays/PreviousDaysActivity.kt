@@ -1,19 +1,16 @@
 package com.alexsullivan.datacollor.previousdays
 
+//import androidx.compose.foundation.lazy.grid.GridCells
+//import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.GridCells
 import androidx.compose.foundation.lazy.LazyVerticalGrid
-//import androidx.compose.foundation.lazy.grid.GridCells
-//import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -24,9 +21,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.colorResource
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
@@ -36,9 +30,9 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.R
+import com.alexsullivan.datacollor.RatingView
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
-import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.utils.refreshWidget
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
@@ -161,30 +155,11 @@ class PreviousDaysActivity : AppCompatActivity() {
             IconButton(onClick = { viewModel.ratingEntityChanged(false, entity) }) {
                 Icon(painterResource(id = R.drawable.minus), "Minus")
             }
-            RatingView(entity.rating)
+            RatingView(entity.rating, Modifier.size(24.dp))
             IconButton(onClick = { viewModel.ratingEntityChanged(true, entity) }) {
                 Icon(Icons.Filled.Add, "Add")
             }
         }
-    }
-
-    @Composable
-
-    private fun RatingView(rating: Rating) {
-        val colorRes = when (rating) {
-            Rating.TERRIBLE -> R.color.ratingTerrible
-            Rating.POOR -> R.color.ratingPoor
-            Rating.MEDIOCRE -> R.color.ratingMediocre
-            Rating.GOOD -> R.color.ratingGood
-            Rating.GREAT -> R.color.ratingGreat
-        }
-        val cornerRadius = dimensionResource(id = R.dimen.ratingCorners)
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .background(colorResource(id = colorRes), shape = RoundedCornerShape(cornerRadius))
-                .border(1.dp, Color.Black, shape = RoundedCornerShape(cornerRadius))
-        )
     }
 
     private fun showDatePicker() {
