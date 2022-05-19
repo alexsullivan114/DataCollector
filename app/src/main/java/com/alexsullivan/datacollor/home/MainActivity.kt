@@ -1,48 +1,52 @@
 package com.alexsullivan.datacollor.home
 
+import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.*
-import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
-import com.alexsullivan.datacollor.database.TrackableManager
-import kotlinx.coroutines.launch
-import android.content.Intent
-import android.widget.Toast
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.runtime.*
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.work.*
 import com.alexsullivan.datacollor.*
 import com.alexsullivan.datacollor.R
-import com.alexsullivan.datacollor.settings.SettingsActivity
+import com.alexsullivan.datacollor.database.Trackable
+import com.alexsullivan.datacollor.database.TrackableEntityDatabase
+import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
-import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
+import com.alexsullivan.datacollor.insights.InsightsActivity
 import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
+import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.alexsullivan.datacollor.utils.ExportUtil
 import com.alexsullivan.datacollor.utils.refreshWidget
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 @ExperimentalMaterialApi
@@ -83,16 +87,14 @@ class MainActivity : AppCompatActivity() {
         }
 
         lifecycleScope.launch {
-            viewModel.triggerUpdateWidgetFlow
-                .collect {
-                    refreshWidget(this@MainActivity)
-                }
+            viewModel.triggerUpdateWidgetFlow.collect {
+                refreshWidget(this@MainActivity)
+            }
         }
         lifecycleScope.launch {
-            viewModel.triggerPeriodicWorkFlow
-                .collect {
-                    registerPeriodicUploadWorker()
-                }
+            viewModel.triggerPeriodicWorkFlow.collect {
+                registerPeriodicUploadWorker()
+            }
         }
 
         signInToGoogle()
@@ -141,6 +143,13 @@ class MainActivity : AppCompatActivity() {
                     TrackableItem(trackable, modifier = Modifier.pointerInput(Unit) {
                         detectTapGestures(onLongPress = {
                             showDeleteDialog.value = trackable
+                        }, onTap = {
+                            startActivity(
+                                InsightsActivity.getIntent(
+                                    trackable.id,
+                                    this@MainActivity
+                                )
+                            )
                         })
                     })
                 }

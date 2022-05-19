@@ -27,4 +27,7 @@ interface BooleanEntityDao {
 
     @Query("DELETE FROM boolean_trackable_entity_table WHERE trackableId = :id")
     suspend fun delete(id: String)
+
+    @Query("SELECT * FROM boolean_trackable_entity_table WHERE trackableId = :id")
+    suspend fun getEntities(id: String): List<BooleanTrackableEntity>
 }

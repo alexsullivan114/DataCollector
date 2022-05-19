@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.alexsullivan.datacollor">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
@@ -24,6 +23,7 @@
         </activity>
         <activity android:name=".settings.SettingsActivity" />
         <activity android:name=".previousdays.PreviousDaysActivity" />
+        <activity android:name=".insights.InsightsActivity" />
 
         <receiver android:name=".CollectorWidget" android:exported="false">
             <intent-filter>
