@@ -10,7 +10,7 @@ android {
         applicationId "com.alexsullivan.datacollor"
         minSdkVersion 22
         targetSdkVersion 31
-        versionCode 5
+        versionCode 6
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
