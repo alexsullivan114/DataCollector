@@ -1,13 +1,7 @@
 package com.alexsullivan.datacollor.utils
 
-import java.time.LocalTime
-import java.time.OffsetDateTime
+import java.time.LocalDate
 
-fun midnight(): OffsetDateTime {
-    return OffsetDateTime.now().with(LocalTime.MIDNIGHT)
+fun today(): LocalDate {
+    return LocalDate.now()
 }
-
-val OffsetDateTime.midnight: OffsetDateTime
-    get() {
-        return with(LocalTime.MIDNIGHT)
-    }

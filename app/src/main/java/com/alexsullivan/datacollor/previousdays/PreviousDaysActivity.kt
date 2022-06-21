@@ -39,6 +39,7 @@ import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import java.time.ZoneOffset
 
 class PreviousDaysActivity : AppCompatActivity() {
 
@@ -165,7 +166,7 @@ class PreviousDaysActivity : AppCompatActivity() {
     private fun showDatePicker() {
         val calendarConstraints = CalendarConstraints.Builder()
             .setValidator(DateValidatorPointBackward.now())
-            .setOpenAt(viewModel.getDate().toInstant().toEpochMilli())
+            .setOpenAt(viewModel.getDate().atTime(0,0).toInstant(ZoneOffset.UTC).toEpochMilli())
             .build()
         val dialog = MaterialDatePicker.Builder.datePicker()
             .setCalendarConstraints(calendarConstraints)

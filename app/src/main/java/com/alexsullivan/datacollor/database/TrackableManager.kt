@@ -1,13 +1,13 @@
 package com.alexsullivan.datacollor.database
 
 import com.alexsullivan.datacollor.database.entities.*
-import com.alexsullivan.datacollor.utils.midnight
+import com.alexsullivan.datacollor.utils.today
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
-import java.time.OffsetDateTime
+import java.time.LocalDate
 import kotlin.math.max
 
 class TrackableManager(database: TrackableEntityDatabase) {
@@ -18,26 +18,26 @@ class TrackableManager(database: TrackableEntityDatabase) {
 
     suspend fun update() {
         val enabledTrackables = trackableDao.getEnabled()
-        val booleanEntities = booleanDao.getEntities(midnight())
-        val numberEntities = numberDao.getEntities(midnight())
-        val ratingEntities = ratingDao.getEntities(midnight())
+        val booleanEntities = booleanDao.getEntities(today())
+        val numberEntities = numberDao.getEntities(today())
+        val ratingEntities = ratingDao.getEntities(today())
         enabledTrackables.forEach { trackable ->
             when (trackable.type) {
                 TrackableType.BOOLEAN -> {
                     if (!booleanEntities.any { it.trackableId == trackable.id}) {
-                        val entity = BooleanTrackableEntity(trackable.id, false, midnight())
+                        val entity = BooleanTrackableEntity(trackable.id, false, today())
                         saveEntity(TrackableEntity.Boolean(entity))
                     }
                 }
                 TrackableType.NUMBER -> {
                     if (!numberEntities.any { it.trackableId == trackable.id}) {
-                        val entity = NumberTrackableEntity(trackable.id, 0, midnight())
+                        val entity = NumberTrackableEntity(trackable.id, 0, today())
                         saveEntity(TrackableEntity.Number(entity))
                     }
                 }
                 TrackableType.RATING -> {
                     if (!ratingEntities.any { it.trackableId == trackable.id }) {
-                        val entity = RatingTrackableEntity(trackable.id, Rating.MEDIOCRE, midnight())
+                        val entity = RatingTrackableEntity(trackable.id, Rating.MEDIOCRE, today())
                         saveEntity(TrackableEntity.Rating(entity))
                     }
                 }
@@ -45,7 +45,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun toggle(trackable: Trackable, date: OffsetDateTime = midnight()) {
+    suspend fun toggle(trackable: Trackable, date: LocalDate = today()) {
         println("Date: $date")
         println("Trackable: $trackable")
         val entity = booleanDao.getEntity(date, trackable.id)
@@ -55,7 +55,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun updateCount(trackable: Trackable, increment: Boolean, date: OffsetDateTime = midnight()) {
+    suspend fun updateCount(trackable: Trackable, increment: Boolean, date: LocalDate = today()) {
         val entity = numberDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val newCount = if (increment) entity.count + 1 else max(0, entity.count - 1)
@@ -64,7 +64,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun updateRating(trackable: Trackable, increment: Boolean, date: OffsetDateTime = midnight()) {
+    suspend fun updateRating(trackable: Trackable, increment: Boolean, date: LocalDate = today()) {
         val entity = ratingDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val newRating = if (increment) entity.rating.increment() else entity.rating.decrement()
@@ -98,16 +98,16 @@ class TrackableManager(database: TrackableEntityDatabase) {
     }
 
     suspend fun deleteTrackableEntities(id: String) {
-        booleanDao.delete(id)
-        numberDao.delete(id)
-        ratingDao.delete(id)
+        booleanDao.deleteAllForTrackable(id)
+        numberDao.deleteAllForTrackable(id)
+        ratingDao.deleteAllForTrackable(id)
     }
 
     fun getTrackablesFlow(): Flow<List<Trackable>> {
         return trackableDao.getTrackablesFlow()
     }
 
-    fun getTrackableEntitiesByDateFlow(date: OffsetDateTime): Flow<List<TrackableEntity>> {
+    fun getTrackableEntitiesByDateFlow(date: LocalDate): Flow<List<TrackableEntity>> {
         val booleansFlow = booleanDao.getEntitiesFlow(date).map { entitiesList ->
             entitiesList.map { TrackableEntity.Boolean(it) }
         }
@@ -136,10 +136,27 @@ class TrackableManager(database: TrackableEntityDatabase) {
         return booleanEntities + numberEntities + ratingEntities
     }
 
+    suspend fun deleteEntities(entities: List<TrackableEntity>) {
+        val booleanTities = mutableListOf<BooleanTrackableEntity>()
+        val ratingTities = mutableListOf<RatingTrackableEntity>()
+        val numberTities = mutableListOf<NumberTrackableEntity>()
+        entities.forEach { entity ->
+            when (entity) {
+                is TrackableEntity.Boolean -> booleanTities.add(entity.booleanEntity)
+                is TrackableEntity.Number -> numberTities.add(entity.numberEntity)
+                is TrackableEntity.Rating -> ratingTities.add(entity.ratingEntity)
+            }
+        }
+
+        booleanTities.forEach { booleanDao.delete(it) }
+        numberTities.forEach { numberDao.delete(it) }
+        ratingTities.forEach { ratingDao.delete(it) }
+    }
+
     suspend fun getTodaysTrackableEntities(): List<TrackableEntity> {
-        val booleanEntities = booleanDao.getEntities(midnight()).map { TrackableEntity.Boolean(it) }
-        val numberEntities = numberDao.getEntities(midnight()).map { TrackableEntity.Number(it) }
-        val ratingEntities = ratingDao.getEntities(midnight()).map { TrackableEntity.Rating(it) }
+        val booleanEntities = booleanDao.getEntities(today()).map { TrackableEntity.Boolean(it) }
+        val numberEntities = numberDao.getEntities(today()).map { TrackableEntity.Number(it) }
+        val ratingEntities = ratingDao.getEntities(today()).map { TrackableEntity.Rating(it) }
         return booleanEntities + numberEntities + ratingEntities
     }
 

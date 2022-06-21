@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 @Database(
-    version = 7,
+    version = 8,
     entities = [
         BooleanTrackableEntity::class,
         NumberTrackableEntity::class,
@@ -47,8 +47,6 @@ abstract class TrackableEntityDatabase : RoomDatabase() {
     abstract fun trackableRatingDao(): RatingEntityDao
 
     companion object {
-        // Singleton prevents multiple instances of database opening at the
-        // same time.
         @Volatile
         private var INSTANCE: TrackableEntityDatabase? = null
 

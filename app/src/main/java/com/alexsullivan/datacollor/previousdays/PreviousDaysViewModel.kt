@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
-import com.alexsullivan.datacollor.utils.midnight
+import com.alexsullivan.datacollor.utils.today
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import java.time.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
 
@@ -17,7 +20,7 @@ class PreviousDaysViewModel(
     private val trackableManager: TrackableManager,
 ): ViewModel() {
 
-    private var date: OffsetDateTime = midnight()
+    private var date: LocalDate = today()
         set(value) {
             field = value
             viewModelScope.launch {
@@ -62,16 +65,10 @@ class PreviousDaysViewModel(
     }
 
     fun dateSelected(dateTimestamp: Long) {
-        val offsetDateTime = OffsetDateTime.ofInstant(
+        date = LocalDateTime.ofInstant(
             Instant.ofEpochMilli(dateTimestamp),
             ZoneId.of("UTC")
-        )
-        val currentOffset = OffsetDateTime.now().offset
-        date = OffsetDateTime.of(
-            offsetDateTime.toLocalDate(),
-            LocalTime.MIDNIGHT,
-            currentOffset
-        ).midnight
+        ).toLocalDate()
     }
 
     fun nextDayPressed() {
@@ -106,15 +103,15 @@ class PreviousDaysViewModel(
             _triggerUpdateWidgetsFlow.send(Unit)
         }
 
-    fun getDate(): OffsetDateTime {
+    fun getDate(): LocalDate {
        return date
     }
 
-    private fun dateString(date: OffsetDateTime): String {
+    private fun dateString(date: LocalDate): String {
         return date.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.FULL))
     }
 
-    private suspend fun displayableEntitiesForDateFlow(date: OffsetDateTime): Flow<List<DisplayableTrackableEntity>> {
+    private suspend fun displayableEntitiesForDateFlow(date: LocalDate): Flow<List<DisplayableTrackableEntity>> {
         val trackables = trackableManager.getTrackables()
         return trackableManager.getTrackableEntitiesByDateFlow(date)
             .map { entities ->
@@ -136,8 +133,8 @@ class PreviousDaysViewModel(
         }
     }
 
-    private fun shouldDisableNext(date: OffsetDateTime): Boolean {
-        return date.toLocalDate().isEqual(LocalDate.now())
+    private fun shouldDisableNext(date: LocalDate): Boolean {
+        return date.isEqual(LocalDate.now())
     }
 
     private fun initialUiState() = UiState(

@@ -43,7 +43,7 @@ class InsightsViewModel(
 
     private suspend fun getRatingUiState(trackable: Trackable): RatingUiState {
         val entities = trackableManager.getRatingEntities(trackableId).sortedBy { it.date }
-        val datePairs = entities.map { it.date.toLocalDate() to it.rating }
+        val datePairs = entities.map { it.date to it.rating }
         val dayAverages = entities.groupBy { it.date.dayOfWeek }.mapValues { (dayOfWeek, entities) ->
             val averageEntitiesRating = (entities.sumOf { it.rating.value }) / entities.size.toFloat()
             averageEntitiesRating
@@ -65,7 +65,7 @@ class InsightsViewModel(
 
     private suspend fun getNumericUiState(trackable: Trackable): NumericUiState {
         val entities = trackableManager.getNumberEntities(trackableId).sortedBy { it.date }
-        val datePairs = entities.map { it.date.toLocalDate() to it.count }
+        val datePairs = entities.map { it.date to it.count }
         val totalCount = entities.sumOf { it.count }
         val yearStartCount = getNumericYearStartCount(entities)
         val perWeekCount = getNumericPerWeekCount(entities)
@@ -115,7 +115,7 @@ class InsightsViewModel(
     }
 
     private fun getToggledDates(entities: List<BooleanTrackableEntity>): List<LocalDate> {
-        return entities.filter { it.executed }.map { it.date.toLocalDate() }
+        return entities.filter { it.executed }.map { it.date }
     }
 
     private fun getTotalCount(entities: List<BooleanTrackableEntity>): Int {

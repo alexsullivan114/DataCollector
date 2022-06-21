@@ -6,6 +6,7 @@ import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.*
 import java.text.SimpleDateFormat
 import java.time.Instant
+import java.time.LocalDate
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -16,10 +17,9 @@ object TrackableSerializer {
 
     fun serialize(entities: List<TrackableEntity>, trackables: List<Trackable>): String {
         val sortedTrackables = trackables.sortedBy { it.title }
-        // TODO: Check to see that this is correct
         val groupedTrackables = entities.groupBy { it.date }.toSortedMap()
         val csvText = groupedTrackables.map { (date, entities) ->
-            var entry = date.format(DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+            var entry = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
             sortedTrackables.forEach { trackable ->
                 val associatedEntity = entities.firstOrNull { it.trackableId == trackable.id }
                 val dataString = serializeEntity(trackable, associatedEntity)
@@ -81,7 +81,7 @@ object TrackableSerializer {
         }
     }
 
-    private fun constructEntity(data: String, date: OffsetDateTime): TrackableEntity? {
+    private fun constructEntity(data: String, date: LocalDate): TrackableEntity? {
         val numberData = data.toIntOrNull()
         val rating = data.deserializeToRating()
         val booleanData = data.toBooleanStrictOrNull()
@@ -107,14 +107,16 @@ object TrackableSerializer {
     }
 
     @SuppressLint("SimpleDateFormat")
-    private fun parseDate(dateString: String): OffsetDateTime {
+    private fun parseDate(dateString: String): LocalDate {
         return try {
-            OffsetDateTime.parse(dateString)
+            OffsetDateTime.parse(dateString).toLocalDate()
+        } catch (exception: DateTimeParseException) {
+            LocalDate.parse(dateString)
         } catch (exception: DateTimeParseException) {
             // We're probably in old date land.
             val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
             val date = format.parse(dateString)!!
-            OffsetDateTime.ofInstant(Instant.ofEpochMilli(date.time), ZoneId.systemDefault())
+            OffsetDateTime.ofInstant(Instant.ofEpochMilli(date.time), ZoneId.systemDefault()).toLocalDate()
         }
     }
 }
