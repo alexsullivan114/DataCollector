@@ -38,7 +38,7 @@ import kotlinx.coroutines.launch
 class ConfigurationActivity : AppCompatActivity() {
     private val viewModel: ConfigurationViewModel by viewModels {
         object: ViewModelProvider.Factory {
-            override fun <T : ViewModel?> create(modelClass: Class<T>): T {
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this@ConfigurationActivity))
                 val updateUseCase = UpdateTrackablesUseCase(manager)
                 return ConfigurationViewModel(manager, updateUseCase) as T
