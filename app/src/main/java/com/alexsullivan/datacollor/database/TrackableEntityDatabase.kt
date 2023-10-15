@@ -8,24 +8,28 @@ import com.alexsullivan.datacollor.database.daos.BooleanEntityDao
 import com.alexsullivan.datacollor.database.daos.NumberEntityDao
 import com.alexsullivan.datacollor.database.daos.RatingEntityDao
 import com.alexsullivan.datacollor.database.daos.TrackableDao
+import com.alexsullivan.datacollor.database.daos.WeatherDao
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
+import com.alexsullivan.datacollor.database.entities.WeatherEntity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
 @Database(
-    version = 8,
+    version = 9,
     entities = [
         BooleanTrackableEntity::class,
         NumberTrackableEntity::class,
         RatingTrackableEntity::class,
-        Trackable::class
+        Trackable::class,
+        WeatherEntity::class
     ],
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
-        AutoMigration(from = 5, to = 6)
+        AutoMigration(from = 5, to = 6),
+        AutoMigration(from = 8, to = 9)
     ]
 )
 @TypeConverters(Converters::class)
@@ -45,6 +49,7 @@ abstract class TrackableEntityDatabase : RoomDatabase() {
     abstract fun trackableBooleanDao(): BooleanEntityDao
     abstract fun trackableNumberDao(): NumberEntityDao
     abstract fun trackableRatingDao(): RatingEntityDao
+    abstract fun weatherDao(): WeatherDao
 
     companion object {
         @Volatile
