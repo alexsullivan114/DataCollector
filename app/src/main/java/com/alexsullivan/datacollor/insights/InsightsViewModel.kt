@@ -1,6 +1,7 @@
 package com.alexsullivan.datacollor.insights
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableManager
@@ -11,6 +12,9 @@ import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.BooleanUiState
 import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.NumericUiState
 import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.RatingUiState
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -22,8 +26,8 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
 import kotlin.math.floor
 
-class InsightsViewModel(
-    private val trackableId: String,
+class InsightsViewModel @AssistedInject constructor(
+    @Assisted private val trackableId: String,
     private val trackableManager: TrackableManager
 ) : ViewModel() {
     private val _uiFlow = MutableStateFlow<UiState?>(null)
@@ -156,4 +160,21 @@ class InsightsViewModel(
             val dateRatings: List<Pair<LocalDate, Rating>>
         ) : UiState()
     }
+
+    companion object {
+        fun provideFactory(
+            assistedFactory: InsightsViewModelFactory,
+            trackableId: String
+        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                return assistedFactory.create(trackableId) as T
+            }
+        }
+    }
+}
+
+@AssistedFactory
+interface InsightsViewModelFactory {
+    fun create(trackableId: String): InsightsViewModel
 }

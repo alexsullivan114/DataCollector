@@ -2,14 +2,20 @@ package com.alexsullivan.datacollor.configuration
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableManager
-import com.alexsullivan.datacollor.UpdateTrackablesUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class ConfigurationViewModel(
+@HiltViewModel
+class ConfigurationViewModel @Inject constructor(
     private val trackableManager: TrackableManager,
     private val updateTrackablesUseCase: UpdateTrackablesUseCase
 ) : ViewModel() {

@@ -11,13 +11,14 @@ import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.File
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 
 class BackupTrackablesUseCase @Inject constructor(
-    private val context: Context,
+    @ApplicationContext private val context: Context,
     private val getLifetimeData: GetLifetimeDataUseCase
 ) {
     suspend fun uploadToDrive(fileId: String): File = withContext(Dispatchers.IO) {

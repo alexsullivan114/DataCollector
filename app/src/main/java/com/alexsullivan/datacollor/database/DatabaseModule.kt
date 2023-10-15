@@ -14,7 +14,7 @@ import dagger.hilt.components.SingletonComponent
 
 @Module
 @InstallIn(SingletonComponent::class)
-object TrackableEntityDatabaseModule {
+object DatabaseModule {
     @Provides
     fun providesTrackableEntityDatabase(@ApplicationContext context: Context): TrackableEntityDatabase {
         return TrackableEntityDatabase.getDatabase(context)
@@ -43,5 +43,10 @@ object TrackableEntityDatabaseModule {
     @Provides
     fun providesTrackablesDao(database: TrackableEntityDatabase): TrackableDao {
         return database.trackableDao()
+    }
+
+    @Provides
+    fun providesTrackableManager(database: TrackableEntityDatabase): TrackableManager {
+        return TrackableManager(database)
     }
 }

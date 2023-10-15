@@ -25,31 +25,11 @@ import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
-
-    private val viewModel: SettingsViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val database = TrackableEntityDatabase.getDatabase(this@SettingsActivity)
-                val getTrackableEntities = GetTrackableEntitiesUseCase(
-                    database.trackableBooleanDao(),
-                    database.trackableNumberDao(),
-                    database.trackableRatingDao()
-                )
-                val getLifetimeData = GetLifetimeDataUseCase(
-                    database.trackableDao(),
-                    getTrackableEntities,
-                    database.weatherDao()
-                )
-                val backupUseCase =
-                    BackupTrackablesUseCase(this@SettingsActivity, getLifetimeData)
-                val prefs = QLPreferences(this@SettingsActivity)
-                return SettingsViewModel(backupUseCase, prefs) as T
-            }
-        }
-    }
-
+    private val viewModel: SettingsViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

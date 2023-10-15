@@ -48,42 +48,17 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 @ExperimentalMaterialApi
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
-    private val viewModel: MainViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val database = TrackableEntityDatabase.getDatabase(this@MainActivity)
-                val manager = TrackableManager(database)
-                val updateUseCase = UpdateTrackablesUseCase(manager)
-                val getTrackableEntities = GetTrackableEntitiesUseCase(
-                    database.trackableBooleanDao(),
-                    database.trackableNumberDao(),
-                    database.trackableRatingDao()
-                )
-                val getLifetimeData = GetLifetimeDataUseCase(
-                    database.trackableDao(),
-                    getTrackableEntities,
-                    database.weatherDao()
-                )
-                val backupUseCase =
-                    BackupTrackablesUseCase(this@MainActivity, getLifetimeData)
-                val prefs = QLPreferences(this@MainActivity)
-                return MainViewModel(
-                    manager,
-                    updateUseCase,
-                    backupUseCase,
-                    prefs,
-                    database.weatherDao()
-                ) as T
-            }
-        }
-    }
+    private val viewModel: MainViewModel by viewModels()
+    @Inject lateinit var exportUtil: ExportUtil
 
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -255,7 +230,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun export() {
-        lifecycleScope.launchWhenCreated { ExportUtil(this@MainActivity).export() }
+        lifecycleScope.launchWhenCreated { exportUtil.export() }
     }
 
     private fun signInToGoogle() {

@@ -5,9 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import com.alexsullivan.datacollor.utils.today
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
@@ -15,8 +20,10 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
+import javax.inject.Inject
 
-class PreviousDaysViewModel(
+@HiltViewModel
+class PreviousDaysViewModel @Inject constructor(
     private val trackableManager: TrackableManager,
 ): ViewModel() {
 

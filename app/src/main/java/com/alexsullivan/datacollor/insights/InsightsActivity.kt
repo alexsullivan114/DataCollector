@@ -18,17 +18,15 @@ import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class InsightsActivity : AppCompatActivity() {
+    @Inject lateinit var insightsViewModelFactory: InsightsViewModelFactory
+
     private val viewModel: InsightsViewModel by viewModels {
-        object : ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val id = intent.getStringExtra(ID_KEY)!!
-                val database = TrackableEntityDatabase.getDatabase(this@InsightsActivity)
-                val trackableManager = TrackableManager(database)
-                return InsightsViewModel(id, trackableManager) as T
-            }
-        }
+        InsightsViewModel.provideFactory(insightsViewModelFactory, intent.getStringExtra(ID_KEY)!!)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

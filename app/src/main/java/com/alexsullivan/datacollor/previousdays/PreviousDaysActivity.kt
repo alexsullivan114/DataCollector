@@ -1,7 +1,5 @@
 package com.alexsullivan.datacollor.previousdays
 
-//import androidx.compose.foundation.lazy.grid.GridCells
-//import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -37,22 +35,14 @@ import com.alexsullivan.datacollor.utils.refreshWidget
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
 import com.google.android.material.datepicker.MaterialDatePicker
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.time.ZoneOffset
 
+@AndroidEntryPoint
 class PreviousDaysActivity : AppCompatActivity() {
-
-    private val viewModel: PreviousDaysViewModel by viewModels {
-        object: ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val database = TrackableEntityDatabase.getDatabase(this@PreviousDaysActivity)
-                val manager = TrackableManager(database)
-                return PreviousDaysViewModel(manager) as T
-            }
-        }
-    }
-
+    private val viewModel: PreviousDaysViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

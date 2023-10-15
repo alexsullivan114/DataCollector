@@ -9,14 +9,17 @@ import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.daos.WeatherDao
 import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.serialization.TrackableDeserializer
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     private val trackableManager: TrackableManager,
     private val updateTrackablesUseCase: UpdateTrackablesUseCase,
     private val backupTrackablesUseCase: BackupTrackablesUseCase,
