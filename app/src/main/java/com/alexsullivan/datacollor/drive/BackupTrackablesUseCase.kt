@@ -18,7 +18,7 @@ class BackupTrackablesUseCase(
     private val trackableManager: TrackableManager,
     private val context: Context
 ) {
-    suspend fun uploadToDrive(fileId: String) = withContext(Dispatchers.IO) {
+    suspend fun uploadToDrive(fileId: String): File = withContext(Dispatchers.IO) {
         val drive = createDriveObject()
         val newFile = File()
         val newInputStream = createTrackablesCsv().byteInputStream()

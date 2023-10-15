@@ -41,6 +41,7 @@ import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
 import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.alexsullivan.datacollor.utils.ExportUtil
 import com.alexsullivan.datacollor.utils.refreshWidget
+import com.alexsullivan.datacollor.weather.WeatherWorker
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
@@ -97,6 +98,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        registerPeriodicWeatherWorker()
         signInToGoogle()
     }
 
@@ -256,6 +258,23 @@ class MainActivity : AppCompatActivity() {
         ).setConstraints(
             Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         ).build()
-        WorkManager.getInstance(this@MainActivity).enqueueUniquePeriodicWork("UploadToDrive", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
+        WorkManager.getInstance(this@MainActivity).enqueueUniquePeriodicWork(
+            "UploadToDrive",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
+    }
+
+    private fun registerPeriodicWeatherWorker() {
+        val periodicWorkRequest = PeriodicWorkRequestBuilder<WeatherWorker>(
+            24, TimeUnit.HOURS
+        ).setConstraints(
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        ).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "Weather",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
     }
 }

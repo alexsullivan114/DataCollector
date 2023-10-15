@@ -7,7 +7,8 @@ import com.alexsullivan.datacollor.QLPreferences
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
 
-class DriveUploadWorker(private val context: Context, workerParameters: WorkerParameters): CoroutineWorker(context, workerParameters) {
+class DriveUploadWorker(private val context: Context, workerParameters: WorkerParameters) :
+    CoroutineWorker(context, workerParameters) {
     override suspend fun doWork(): Result {
         val trackableEntityDatabase = TrackableEntityDatabase.getDatabase(context)
         val trackableManager = TrackableManager(trackableEntityDatabase)
