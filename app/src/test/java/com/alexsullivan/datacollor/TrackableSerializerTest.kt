@@ -3,7 +3,7 @@ package com.alexsullivan.datacollor
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.*
-import org.junit.Assert.*
+import com.alexsullivan.datacollor.serialization.TrackableSerializer
 import org.junit.Test
 import java.util.*
 

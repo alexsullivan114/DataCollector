@@ -31,6 +31,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.*
 import com.alexsullivan.datacollor.*
 import com.alexsullivan.datacollor.R
+import com.alexsullivan.datacollor.database.GetTrackableEntitiesUseCase
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
@@ -38,6 +39,7 @@ import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
 import com.alexsullivan.datacollor.insights.InsightsActivity
 import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
+import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
 import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.alexsullivan.datacollor.utils.ExportUtil
 import com.alexsullivan.datacollor.utils.refreshWidget
@@ -54,14 +56,31 @@ import java.util.concurrent.TimeUnit
 class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels {
-        object: ViewModelProvider.Factory {
+        object : ViewModelProvider.Factory {
             override fun <T : ViewModel> create(modelClass: Class<T>): T {
                 val database = TrackableEntityDatabase.getDatabase(this@MainActivity)
                 val manager = TrackableManager(database)
                 val updateUseCase = UpdateTrackablesUseCase(manager)
-                val backupUseCase = BackupTrackablesUseCase(manager, this@MainActivity)
+                val getTrackableEntities = GetTrackableEntitiesUseCase(
+                    database.trackableBooleanDao(),
+                    database.trackableNumberDao(),
+                    database.trackableRatingDao()
+                )
+                val getLifetimeData = GetLifetimeDataUseCase(
+                    database.trackableDao(),
+                    getTrackableEntities,
+                    database.weatherDao()
+                )
+                val backupUseCase =
+                    BackupTrackablesUseCase(this@MainActivity, getLifetimeData)
                 val prefs = QLPreferences(this@MainActivity)
-                return MainViewModel(manager, updateUseCase, backupUseCase, prefs) as T
+                return MainViewModel(
+                    manager,
+                    updateUseCase,
+                    backupUseCase,
+                    prefs,
+                    database.weatherDao()
+                ) as T
             }
         }
     }

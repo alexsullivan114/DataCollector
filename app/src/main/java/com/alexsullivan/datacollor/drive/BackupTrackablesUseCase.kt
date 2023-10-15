@@ -1,8 +1,8 @@
 package com.alexsullivan.datacollor.drive
 
 import android.content.Context
-import com.alexsullivan.datacollor.TrackableSerializer
-import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
+import com.alexsullivan.datacollor.serialization.TrackableSerializer
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.Scopes
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -13,10 +13,12 @@ import com.google.api.services.drive.Drive
 import com.google.api.services.drive.model.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-class BackupTrackablesUseCase(
-    private val trackableManager: TrackableManager,
-    private val context: Context
+
+class BackupTrackablesUseCase @Inject constructor(
+    private val context: Context,
+    private val getLifetimeData: GetLifetimeDataUseCase
 ) {
     suspend fun uploadToDrive(fileId: String): File = withContext(Dispatchers.IO) {
         val drive = createDriveObject()
@@ -35,9 +37,7 @@ class BackupTrackablesUseCase(
     }
 
     private suspend fun createTrackablesCsv() = withContext(Dispatchers.IO) {
-        val trackableEntities = trackableManager.getTrackableEntities()
-        val trackables = trackableManager.getEnabledTrackables()
-        TrackableSerializer.serialize(trackableEntities, trackables)
+        TrackableSerializer.serialize(getLifetimeData())
     }
 
     suspend fun fetchExistingDriveFileId(): String? = withContext(Dispatchers.IO) {

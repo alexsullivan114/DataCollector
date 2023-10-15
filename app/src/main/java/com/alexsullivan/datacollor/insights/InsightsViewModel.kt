@@ -8,8 +8,9 @@ import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.Rating
-import com.alexsullivan.datacollor.database.entities.TrackableEntity
-import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.*
+import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.BooleanUiState
+import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.NumericUiState
+import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.RatingUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -128,10 +129,6 @@ class InsightsViewModel(
             val entityYear = it.date.year
             (entityYear == thisYear) && it.executed
         }
-    }
-
-    private suspend fun getTrackableEntitiesForTrackable(trackable: Trackable): List<TrackableEntity> {
-        return trackableManager.getTrackableEntities(trackable.id)
     }
 
     sealed class UiState {

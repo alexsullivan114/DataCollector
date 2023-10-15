@@ -3,20 +3,25 @@ package com.alexsullivan.datacollor.home
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.QLPreferences
-import com.alexsullivan.datacollor.TrackableSerializer
 import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.database.daos.WeatherDao
 import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
+import com.alexsullivan.datacollor.serialization.TrackableDeserializer
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 class MainViewModel(
     private val trackableManager: TrackableManager,
     private val updateTrackablesUseCase: UpdateTrackablesUseCase,
     private val backupTrackablesUseCase: BackupTrackablesUseCase,
-    private val prefs: QLPreferences
+    private val prefs: QLPreferences,
+    private val weatherDao: WeatherDao
 ): ViewModel() {
     private val _itemsFlow = MutableStateFlow(emptyList<Trackable>())
     private val _triggerUpdateWidgetsFlow = Channel<Unit>()
@@ -55,11 +60,16 @@ class MainViewModel(
                 if (backedUpId != null) {
                     val contents =
                         backupTrackablesUseCase.fetchExistingDriveFileContents(backedUpId)
-                    val trackableEntityMap = TrackableSerializer.deserialize(contents)
-                    trackableEntityMap.forEach { (trackable, entities) ->
-                        // TODO: What if there's an existing trackable with this title already?
-                        trackableManager.addTrackable(trackable)
-                        entities.forEach { trackableManager.saveEntity(it) }
+                    val lifetimeData = TrackableDeserializer.deserialize(contents)
+                    lifetimeData.trackables.forEach { trackableManager.addTrackable(it) }
+                    lifetimeData.days.map { it.trackedEntities }.flatten()
+                        .forEach { trackableManager.saveEntity(it) }
+                    lifetimeData.days.forEach {
+                        it.weatherEntity?.let { weather ->
+                            weatherDao.saveWeather(
+                                weather
+                            )
+                        }
                     }
                 }
                 val driveFileId = backedUpId ?: backupTrackablesUseCase.createDriveFile()

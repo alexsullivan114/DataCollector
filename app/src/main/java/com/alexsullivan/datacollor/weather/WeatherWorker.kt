@@ -12,7 +12,7 @@ import dagger.assisted.AssistedInject
 class WeatherWorker @AssistedInject constructor(
     @Assisted private val context: Context,
     @Assisted private val workerParameters: WorkerParameters,
-    private val getWeatherUseCase: GetWeatherEntityUseCase
+    private val getWeatherUseCase: FetchWeatherEntityUseCase
 ) :
     CoroutineWorker(context, workerParameters) {
     override suspend fun doWork(): Result {
