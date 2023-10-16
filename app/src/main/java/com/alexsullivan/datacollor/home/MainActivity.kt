@@ -1,5 +1,6 @@
 package com.alexsullivan.datacollor.home
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -74,6 +75,11 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 }
         }
+    private val locationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        if (it) {
+            registerPeriodicWeatherWorker()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -92,7 +98,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        registerPeriodicWeatherWorker()
+        locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
         signInToGoogle()
     }
 
