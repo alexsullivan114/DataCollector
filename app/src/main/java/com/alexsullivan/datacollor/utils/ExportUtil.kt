@@ -2,27 +2,21 @@ package com.alexsullivan.datacollor.utils
 
 import android.app.Activity
 import android.content.Intent
-import android.util.Log
 import androidx.core.content.FileProvider
 import com.alexsullivan.datacollor.BuildConfig
-import com.alexsullivan.datacollor.TrackableSerializer
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
-import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
+import com.alexsullivan.datacollor.serialization.TrackableSerializer
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileWriter
+import javax.inject.Inject
 
-class ExportUtil(private val activity: Activity) {
+class ExportUtil @Inject constructor(private val activity: Activity, private val getLifetimeData: GetLifetimeDataUseCase) {
 
     suspend fun export() {
         withContext(Dispatchers.IO) {
-            val database = TrackableEntityDatabase.getDatabase(activity)
-            val trackableManager = TrackableManager(database)
-            val trackableEntities = trackableManager.getTrackableEntities()
-            val trackables = trackableManager.getEnabledTrackables()
-            Log.d("Export", "Trackables: $trackables")
-            val csvText = TrackableSerializer.serialize(trackableEntities, trackables)
+            val csvText = TrackableSerializer.serialize(getLifetimeData())
 
             val dir = File(activity.filesDir, "csvs")
             if (!dir.exists()) {

@@ -1,19 +1,23 @@
 package com.alexsullivan.datacollor.drive
 
 import android.content.Context
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.alexsullivan.datacollor.QLPreferences
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
-import com.alexsullivan.datacollor.database.TrackableManager
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 
-class DriveUploadWorker(private val context: Context, workerParameters: WorkerParameters): CoroutineWorker(context, workerParameters) {
+@HiltWorker
+class DriveUploadWorker @AssistedInject constructor(
+    @Assisted private val context: Context,
+    @Assisted workerParameters: WorkerParameters,
+    private val backupTrackablesUseCase: BackupTrackablesUseCase,
+    private val preferences: QLPreferences
+) :
+    CoroutineWorker(context, workerParameters) {
     override suspend fun doWork(): Result {
-        val trackableEntityDatabase = TrackableEntityDatabase.getDatabase(context)
-        val trackableManager = TrackableManager(trackableEntityDatabase)
-        val backupTrackablesUseCase = BackupTrackablesUseCase(trackableManager, context)
-        val prefs = QLPreferences(context)
-        prefs.backupFileId?.let {
+        preferences.backupFileId?.let {
             backupTrackablesUseCase.uploadToDrive(it)
         }
         return Result.success()

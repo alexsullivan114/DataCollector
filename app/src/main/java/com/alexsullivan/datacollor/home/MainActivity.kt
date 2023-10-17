@@ -1,5 +1,6 @@
 package com.alexsullivan.datacollor.home
 
+import android.Manifest
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -31,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.work.*
 import com.alexsullivan.datacollor.*
 import com.alexsullivan.datacollor.R
+import com.alexsullivan.datacollor.database.GetTrackableEntitiesUseCase
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
@@ -38,32 +40,26 @@ import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
 import com.alexsullivan.datacollor.insights.InsightsActivity
 import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
+import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
 import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.alexsullivan.datacollor.utils.ExportUtil
 import com.alexsullivan.datacollor.utils.refreshWidget
+import com.alexsullivan.datacollor.weather.WeatherWorker
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
 import com.google.api.services.drive.DriveScopes
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
+import javax.inject.Inject
 
 @ExperimentalMaterialApi
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
-
-    private val viewModel: MainViewModel by viewModels {
-        object: ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val database = TrackableEntityDatabase.getDatabase(this@MainActivity)
-                val manager = TrackableManager(database)
-                val updateUseCase = UpdateTrackablesUseCase(manager)
-                val backupUseCase = BackupTrackablesUseCase(manager, this@MainActivity)
-                val prefs = QLPreferences(this@MainActivity)
-                return MainViewModel(manager, updateUseCase, backupUseCase, prefs) as T
-            }
-        }
-    }
+    private val viewModel: MainViewModel by viewModels()
+    @Inject lateinit var exportUtil: ExportUtil
 
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -79,6 +75,11 @@ class MainActivity : AppCompatActivity() {
                     ).show()
                 }
         }
+    private val locationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
+        if (it) {
+            registerPeriodicWeatherWorker()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,6 +98,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
         signInToGoogle()
     }
 
@@ -234,7 +236,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun export() {
-        lifecycleScope.launchWhenCreated { ExportUtil(this@MainActivity).export() }
+        lifecycleScope.launchWhenCreated { exportUtil.export() }
     }
 
     private fun signInToGoogle() {
@@ -256,6 +258,23 @@ class MainActivity : AppCompatActivity() {
         ).setConstraints(
             Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         ).build()
-        WorkManager.getInstance(this@MainActivity).enqueueUniquePeriodicWork("UploadToDrive", ExistingPeriodicWorkPolicy.KEEP, periodicWorkRequest)
+        WorkManager.getInstance(this@MainActivity).enqueueUniquePeriodicWork(
+            "UploadToDrive",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
+    }
+
+    private fun registerPeriodicWeatherWorker() {
+        val periodicWorkRequest = PeriodicWorkRequestBuilder<WeatherWorker>(
+            24, TimeUnit.HOURS
+        ).setConstraints(
+            Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
+        ).build()
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "Weather",
+            ExistingPeriodicWorkPolicy.KEEP,
+            periodicWorkRequest
+        )
     }
 }

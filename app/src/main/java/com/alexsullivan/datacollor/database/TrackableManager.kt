@@ -1,6 +1,10 @@
 package com.alexsullivan.datacollor.database
 
-import com.alexsullivan.datacollor.database.entities.*
+import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
+import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
+import com.alexsullivan.datacollor.database.entities.Rating
+import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
+import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import com.alexsullivan.datacollor.utils.today
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -10,6 +14,10 @@ import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import kotlin.math.max
 
+// TODO: Predictably this has become super overloaded. I feel like it should really only be used
+// to power the widget; everything else should go through use cases and stuff. Right now my game
+// plan is to start creating use cases for some of this and try to avoid using it going forward,
+// so there might be duplicated functionality between here and some use cases - prefer the use cases
 class TrackableManager(database: TrackableEntityDatabase) {
     private val booleanDao = database.trackableBooleanDao()
     private val numberDao = database.trackableNumberDao()
@@ -136,23 +144,6 @@ class TrackableManager(database: TrackableEntityDatabase) {
         return booleanEntities + numberEntities + ratingEntities
     }
 
-    suspend fun deleteEntities(entities: List<TrackableEntity>) {
-        val booleanTities = mutableListOf<BooleanTrackableEntity>()
-        val ratingTities = mutableListOf<RatingTrackableEntity>()
-        val numberTities = mutableListOf<NumberTrackableEntity>()
-        entities.forEach { entity ->
-            when (entity) {
-                is TrackableEntity.Boolean -> booleanTities.add(entity.booleanEntity)
-                is TrackableEntity.Number -> numberTities.add(entity.numberEntity)
-                is TrackableEntity.Rating -> ratingTities.add(entity.ratingEntity)
-            }
-        }
-
-        booleanTities.forEach { booleanDao.delete(it) }
-        numberTities.forEach { numberDao.delete(it) }
-        ratingTities.forEach { ratingDao.delete(it) }
-    }
-
     suspend fun getTodaysTrackableEntities(): List<TrackableEntity> {
         val booleanEntities = booleanDao.getEntities(today()).map { TrackableEntity.Boolean(it) }
         val numberEntities = numberDao.getEntities(today()).map { TrackableEntity.Number(it) }
@@ -162,13 +153,6 @@ class TrackableManager(database: TrackableEntityDatabase) {
 
     suspend fun getTrackable(id: String): Trackable? {
         return trackableDao.getTrackableById(id)
-    }
-
-    suspend fun getTrackableEntities(trackableId: String): List<TrackableEntity> {
-        val booleanEntities = booleanDao.getEntities(trackableId).map { TrackableEntity.Boolean(it) }
-        val numberEntities = numberDao.getEntities(trackableId).map { TrackableEntity.Number(it) }
-        val ratingEntities = ratingDao.getEntities(trackableId).map { TrackableEntity.Rating(it) }
-        return booleanEntities + numberEntities + ratingEntities
     }
 
     suspend fun getBooleanEntities(trackableId: String): List<BooleanTrackableEntity> {

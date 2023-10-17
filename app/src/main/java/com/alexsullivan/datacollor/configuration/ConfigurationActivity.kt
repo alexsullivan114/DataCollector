@@ -31,20 +31,14 @@ import com.alexsullivan.datacollor.database.TrackableEntityDatabase
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.home.AddTrackableDialog
 import com.alexsullivan.datacollor.UpdateTrackablesUseCase
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 @ExperimentalMaterialApi
+@AndroidEntryPoint
 class ConfigurationActivity : AppCompatActivity() {
-    private val viewModel: ConfigurationViewModel by viewModels {
-        object: ViewModelProvider.Factory {
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                val manager = TrackableManager(TrackableEntityDatabase.getDatabase(this@ConfigurationActivity))
-                val updateUseCase = UpdateTrackablesUseCase(manager)
-                return ConfigurationViewModel(manager, updateUseCase) as T
-            }
-        }
-    }
+    private val viewModel: ConfigurationViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
