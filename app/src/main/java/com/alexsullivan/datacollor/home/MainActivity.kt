@@ -45,6 +45,7 @@ import com.alexsullivan.datacollor.settings.SettingsActivity
 import com.alexsullivan.datacollor.utils.ExportUtil
 import com.alexsullivan.datacollor.utils.refreshWidget
 import com.alexsullivan.datacollor.weather.WeatherWorker
+import com.alexsullivan.datacollor.weather.location_import.TakeoutDataManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
@@ -60,6 +61,7 @@ import javax.inject.Inject
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
     @Inject lateinit var exportUtil: ExportUtil
+    @Inject lateinit var takeoutDataManager: TakeoutDataManager
 
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
@@ -100,6 +102,7 @@ class MainActivity : AppCompatActivity() {
 
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
         signInToGoogle()
+        takeoutDataManager.triggerImport(this)
     }
 
     @Composable
