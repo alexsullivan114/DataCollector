@@ -10,5 +10,10 @@ interface WeatherService {
         @Query("lon") longitude: Double
     ): WeatherResponse
 
-    // TODO: Use historical API?
+    @GET("onecall/timemachine?appid=03b92df104c20209282f8cd31306418e&units=imperial")
+    suspend fun getWeather(
+        @Query("lat") latitude: Double,
+        @Query("lon") longitude: Double,
+        @Query("dt") timestamp: Long
+    ): HistoricalWeatherResponse
 }

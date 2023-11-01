@@ -14,3 +14,6 @@ data class Temp(
 )
 
 data class DailyWeatherDescription(val main: String, val description: String)
+
+data class HistoricalWeatherResponse(val data: List<HistoricalWeatherData>)
+data class HistoricalWeatherData(val dt: Long, val temp: Float, val weather: List<DailyWeatherDescription>)
