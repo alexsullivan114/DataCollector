@@ -102,7 +102,6 @@ class MainActivity : AppCompatActivity() {
 
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
         signInToGoogle()
-        takeoutDataManager.triggerImport(this)
     }
 
     @Composable
