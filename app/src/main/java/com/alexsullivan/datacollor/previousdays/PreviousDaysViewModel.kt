@@ -68,6 +68,7 @@ class PreviousDaysViewModel @Inject constructor(
                 trackableId,
                 this.ratingEntity.rating
             )
+            is TrackableEntity.Time -> TODO("Add support for time")
         }
     }
 

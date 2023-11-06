@@ -4,6 +4,7 @@ import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
+import com.alexsullivan.datacollor.database.entities.TimeTrackableEntity
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import com.alexsullivan.datacollor.utils.today
 import kotlinx.coroutines.Dispatchers
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import java.time.LocalTime
 import kotlin.math.max
 
 // TODO: Predictably this has become super overloaded. I feel like it should really only be used
@@ -22,6 +24,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
     private val booleanDao = database.trackableBooleanDao()
     private val numberDao = database.trackableNumberDao()
     private val ratingDao = database.trackableRatingDao()
+    private val timeDao = database.trackableTimeDao()
     private val trackableDao = database.trackableDao()
 
     suspend fun update() {
@@ -29,6 +32,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         val booleanEntities = booleanDao.getEntities(today())
         val numberEntities = numberDao.getEntities(today())
         val ratingEntities = ratingDao.getEntities(today())
+        val timeEntities = timeDao.getEntities(today())
         enabledTrackables.forEach { trackable ->
             when (trackable.type) {
                 TrackableType.BOOLEAN -> {
@@ -49,13 +53,17 @@ class TrackableManager(database: TrackableEntityDatabase) {
                         saveEntity(TrackableEntity.Rating(entity))
                     }
                 }
+                TrackableType.TIME -> {
+                    if (!timeEntities.any { it.trackableId == trackable.id }) {
+                        val entity = TimeTrackableEntity(trackable.id, null, today())
+                        saveEntity(TrackableEntity.Time(entity))
+                    }
+                }
             }
         }
     }
 
     suspend fun toggle(trackable: Trackable, date: LocalDate = today()) {
-        println("Date: $date")
-        println("Trackable: $trackable")
         val entity = booleanDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
             val updatedEntity = entity.copy(executed = !entity.executed)
@@ -81,6 +89,14 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
+    suspend fun updateTime(trackable: Trackable, date: LocalDate = today()) {
+       val entity = timeDao.getEntity(date, trackable.id)
+        withContext(Dispatchers.IO) {
+            val updatedEntity = entity.copy(time = LocalTime.now())
+            timeDao.save(updatedEntity)
+        }
+    }
+
     suspend fun getEnabledTrackables(): List<Trackable> {
         return trackableDao.getEnabled()
     }
@@ -98,6 +114,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
             is TrackableEntity.Boolean -> booleanDao.save(entity.booleanEntity)
             is TrackableEntity.Number -> numberDao.save(entity.numberEntity)
             is TrackableEntity.Rating -> ratingDao.save(entity.ratingEntity)
+            is TrackableEntity.Time -> timeDao.save(entity.timeEntity)
         }
     }
 
@@ -148,7 +165,8 @@ class TrackableManager(database: TrackableEntityDatabase) {
         val booleanEntities = booleanDao.getEntities(today()).map { TrackableEntity.Boolean(it) }
         val numberEntities = numberDao.getEntities(today()).map { TrackableEntity.Number(it) }
         val ratingEntities = ratingDao.getEntities(today()).map { TrackableEntity.Rating(it) }
-        return booleanEntities + numberEntities + ratingEntities
+        val timeEntities = timeDao.getEntities(today()).map { TrackableEntity.Time(it) }
+        return booleanEntities + numberEntities + ratingEntities + timeEntities
     }
 
     suspend fun getTrackable(id: String): Trackable? {

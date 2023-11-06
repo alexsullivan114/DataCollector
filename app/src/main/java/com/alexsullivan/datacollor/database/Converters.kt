@@ -3,17 +3,32 @@ package com.alexsullivan.datacollor.database
 import androidx.room.TypeConverter
 import com.alexsullivan.datacollor.database.entities.Rating
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 class Converters {
     @TypeConverter
-    fun fromLocalTime(value: LocalDate): String {
+    fun fromLocalDate(value: LocalDate): String {
         return value.format(DateTimeFormatter.ISO_LOCAL_DATE)
     }
 
     @TypeConverter
-    fun toLocalTime(value: String): LocalDate {
+    fun toLocalDate(value: String): LocalDate {
         return LocalDate.parse(value)
+    }
+
+    @TypeConverter
+    fun fromLocalTime(value: LocalTime?): String? {
+        return value?.format(DateTimeFormatter.ISO_TIME)
+    }
+
+    @TypeConverter
+    fun toLocalTime(value: String?): LocalTime? {
+        return try {
+            LocalTime.parse(value)
+        } catch (e: Exception) {
+            return null
+        }
     }
 
     @TypeConverter
@@ -22,6 +37,7 @@ class Converters {
             0 -> TrackableType.BOOLEAN
             1 -> TrackableType.NUMBER
             2 -> TrackableType.RATING
+            3 -> TrackableType.TIME
             else -> null
         }
     }
@@ -32,6 +48,7 @@ class Converters {
            TrackableType.BOOLEAN -> 0
            TrackableType.NUMBER -> 1
            TrackableType.RATING -> 2
+           TrackableType.TIME -> 3
            null -> null
        }
     }

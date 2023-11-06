@@ -7,29 +7,33 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import com.alexsullivan.datacollor.database.daos.BooleanEntityDao
 import com.alexsullivan.datacollor.database.daos.NumberEntityDao
 import com.alexsullivan.datacollor.database.daos.RatingEntityDao
+import com.alexsullivan.datacollor.database.daos.TimeEntityDao
 import com.alexsullivan.datacollor.database.daos.TrackableDao
 import com.alexsullivan.datacollor.database.daos.WeatherDao
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
+import com.alexsullivan.datacollor.database.entities.TimeTrackableEntity
 import com.alexsullivan.datacollor.database.entities.WeatherEntity
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import java.util.*
 
 @Database(
-    version = 9,
+    version = 10,
     entities = [
         BooleanTrackableEntity::class,
         NumberTrackableEntity::class,
         RatingTrackableEntity::class,
+        TimeTrackableEntity::class,
         Trackable::class,
         WeatherEntity::class
     ],
     autoMigrations = [
         AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6),
-        AutoMigration(from = 8, to = 9)
+        AutoMigration(from = 8, to = 9),
+        AutoMigration(from = 9, to = 10)
     ]
 )
 @TypeConverters(Converters::class)
@@ -49,6 +53,7 @@ abstract class TrackableEntityDatabase : RoomDatabase() {
     abstract fun trackableBooleanDao(): BooleanEntityDao
     abstract fun trackableNumberDao(): NumberEntityDao
     abstract fun trackableRatingDao(): RatingEntityDao
+    abstract fun trackableTimeDao(): TimeEntityDao
     abstract fun weatherDao(): WeatherDao
 
     companion object {

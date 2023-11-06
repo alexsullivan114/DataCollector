@@ -41,6 +41,7 @@ class InsightsViewModel @AssistedInject constructor(
                 TrackableType.BOOLEAN -> getBooleanUiState(trackable)
                 TrackableType.NUMBER -> getNumericUiState(trackable)
                 TrackableType.RATING -> getRatingUiState(trackable)
+                TrackableType.TIME -> TODO("Add time insights")
             }
             _uiFlow.emit(state)
         }

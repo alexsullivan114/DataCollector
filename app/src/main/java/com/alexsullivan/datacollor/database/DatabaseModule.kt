@@ -4,6 +4,7 @@ import android.content.Context
 import com.alexsullivan.datacollor.database.daos.BooleanEntityDao
 import com.alexsullivan.datacollor.database.daos.NumberEntityDao
 import com.alexsullivan.datacollor.database.daos.RatingEntityDao
+import com.alexsullivan.datacollor.database.daos.TimeEntityDao
 import com.alexsullivan.datacollor.database.daos.TrackableDao
 import com.alexsullivan.datacollor.database.daos.WeatherDao
 import dagger.Module
@@ -48,5 +49,10 @@ object DatabaseModule {
     @Provides
     fun providesTrackableManager(database: TrackableEntityDatabase): TrackableManager {
         return TrackableManager(database)
+    }
+
+    @Provides
+    fun providesTimeEntityDao(database: TrackableEntityDatabase): TimeEntityDao {
+        return database.trackableTimeDao()
     }
 }
