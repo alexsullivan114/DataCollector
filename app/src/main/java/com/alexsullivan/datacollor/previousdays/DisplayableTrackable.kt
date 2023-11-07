@@ -1,6 +1,7 @@
 package com.alexsullivan.datacollor.previousdays
 
 import com.alexsullivan.datacollor.database.entities.Rating
+import java.time.LocalTime
 
 sealed class DisplayableTrackableEntity {
     abstract val title: String
@@ -24,6 +25,13 @@ sealed class DisplayableTrackableEntity {
         override val title: String,
         override val trackableId: String,
         val rating: Rating
+    ) :
+        DisplayableTrackableEntity()
+
+    data class TimeEntity(
+        override val title: String,
+        override val trackableId: String,
+        val time: LocalTime?
     ) :
         DisplayableTrackableEntity()
 }

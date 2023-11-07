@@ -89,10 +89,10 @@ class TrackableManager(database: TrackableEntityDatabase) {
         }
     }
 
-    suspend fun updateTime(trackable: Trackable, date: LocalDate = today()) {
+    suspend fun updateTime(trackable: Trackable, date: LocalDate = today(), time: LocalTime = LocalTime.now()) {
        val entity = timeDao.getEntity(date, trackable.id)
         withContext(Dispatchers.IO) {
-            val updatedEntity = entity.copy(time = LocalTime.now())
+            val updatedEntity = entity.copy(time = time)
             timeDao.save(updatedEntity)
         }
     }
@@ -132,6 +132,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         return trackableDao.getTrackablesFlow()
     }
 
+    // TODO: This should be replaced by a usecase
     fun getTrackableEntitiesByDateFlow(date: LocalDate): Flow<List<TrackableEntity>> {
         val booleansFlow = booleanDao.getEntitiesFlow(date).map { entitiesList ->
             entitiesList.map { TrackableEntity.Boolean(it) }
@@ -142,10 +143,12 @@ class TrackableManager(database: TrackableEntityDatabase) {
         val ratingsFlow = ratingDao.getEntitiesFlow(date).map { entitiesList ->
             entitiesList.map { TrackableEntity.Rating(it) }
         }
+        val timesFlow = timeDao.getEntitiesFlow(date).map { entitiesList ->
+            entitiesList.map { TrackableEntity.Time(it) }
+        }
 
-
-        return combine(booleansFlow, numbersFlow, ratingsFlow) { a, b, c ->
-            a + b + c
+        return combine(booleansFlow, numbersFlow, ratingsFlow, timesFlow) { a, b, c, d ->
+            a + b + c + d
         }
     }
 
@@ -154,13 +157,7 @@ class TrackableManager(database: TrackableEntityDatabase) {
         trackableDao.saveTrackable(updatedTrackable)
     }
 
-    suspend fun getTrackableEntities(): List<TrackableEntity> {
-        val booleanEntities = booleanDao.getEntities().map { TrackableEntity.Boolean(it) }
-        val numberEntities = numberDao.getEntities().map { TrackableEntity.Number(it) }
-        val ratingEntities = ratingDao.getEntities().map { TrackableEntity.Rating(it) }
-        return booleanEntities + numberEntities + ratingEntities
-    }
-
+    // TODO: This should be replaced by a use case
     suspend fun getTodaysTrackableEntities(): List<TrackableEntity> {
         val booleanEntities = booleanDao.getEntities(today()).map { TrackableEntity.Boolean(it) }
         val numberEntities = numberDao.getEntities(today()).map { TrackableEntity.Number(it) }
