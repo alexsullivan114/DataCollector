@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
@@ -41,6 +42,7 @@ class InsightsViewModel @AssistedInject constructor(
                 TrackableType.BOOLEAN -> getBooleanUiState(trackable)
                 TrackableType.NUMBER -> getNumericUiState(trackable)
                 TrackableType.RATING -> getRatingUiState(trackable)
+                TrackableType.TIME -> getTimeUiState(trackable)
             }
             _uiFlow.emit(state)
         }
@@ -109,6 +111,18 @@ class InsightsViewModel @AssistedInject constructor(
         return BooleanUiState(trackable.title, totalCount, yearStartCount, perWeekCount, dates)
     }
 
+    private suspend fun getTimeUiState(trackable: Trackable): UiState.TimeUiState {
+        val timeTrackables = trackableManager.getTimeEntities(trackable.id)
+        val timeDatePairs = timeTrackables.filter { it.time != null }.map { it.date to it.time!! }
+        val times = timeTrackables.mapNotNull { it.time }
+        val averageTime = times.sumOf { it.toSecondOfDay() } / times.size
+        return UiState.TimeUiState(
+            trackable.title,
+            timeDatePairs,
+            LocalTime.ofSecondOfDay(averageTime.toLong())
+        )
+    }
+
     private fun getPerWeekCount(entities: List<BooleanTrackableEntity>): Float {
         if (entities.isEmpty()) {
             return 0f
@@ -158,6 +172,12 @@ class InsightsViewModel @AssistedInject constructor(
             val highestRatedDay: DayOfWeek,
             val averageRatingBound: Pair<Rating, Rating>,
             val dateRatings: List<Pair<LocalDate, Rating>>
+        ) : UiState()
+
+        data class TimeUiState(
+            val trackableTitle: String,
+            val toggledTimes: List<Pair<LocalDate, LocalTime>>,
+            val averageToggledTime: LocalTime
         ) : UiState()
     }
 

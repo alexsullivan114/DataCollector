@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.FormatStyle
@@ -68,6 +69,11 @@ class PreviousDaysViewModel @Inject constructor(
                 trackableId,
                 this.ratingEntity.rating
             )
+            is TrackableEntity.Time -> DisplayableTrackableEntity.TimeEntity(
+                title,
+                trackableId,
+                this.timeEntity.time
+            )
         }
     }
 
@@ -109,6 +115,13 @@ class PreviousDaysViewModel @Inject constructor(
             trackableManager.updateRating(trackable, increment, date)
             _triggerUpdateWidgetsFlow.send(Unit)
         }
+
+    fun timeEntityChanged(entity: DisplayableTrackableEntity.TimeEntity, newTime: LocalTime) = viewModelScope.launch {
+        val trackables = trackableManager.getTrackables()
+        val trackable = trackables.first { it.id == entity.trackableId }
+        trackableManager.updateTime(trackable, date, newTime)
+        _triggerUpdateWidgetsFlow.send(Unit)
+    }
 
     fun getDate(): LocalDate {
        return date

@@ -8,8 +8,17 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import android.widget.RemoteViews
-import com.alexsullivan.datacollor.database.*
-import com.alexsullivan.datacollor.database.entities.*
+import com.alexsullivan.datacollor.database.Trackable
+import com.alexsullivan.datacollor.database.TrackableEntityDatabase
+import com.alexsullivan.datacollor.database.TrackableManager
+import com.alexsullivan.datacollor.database.TrackableType
+import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
+import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
+import com.alexsullivan.datacollor.database.entities.Rating
+import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
+import com.alexsullivan.datacollor.database.entities.TimeTrackableEntity
+import com.alexsullivan.datacollor.database.entities.TrackableEntity
+import com.alexsullivan.datacollor.utils.displayableString
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -69,6 +78,7 @@ class CollectorWidget : AppWidgetProvider() {
                             val increment = action.contains("-increment")
                             trackingManager.updateRating(trackable, increment)
                         }
+                        TrackableType.TIME -> trackingManager.updateTime(trackable)
                     }
                     val ids: IntArray = AppWidgetManager.getInstance(context)
                         .getAppWidgetIds(ComponentName(context, CollectorWidget::class.java))
@@ -100,12 +110,33 @@ class CollectorWidget : AppWidgetProvider() {
                     is TrackableEntity.Boolean -> createBooleanTrackableView(context, trackable, entity.booleanEntity)
                     is TrackableEntity.Number -> createNumberTrackableView(context, trackable, entity.numberEntity)
                     is TrackableEntity.Rating -> createRatingTrackableView(context, trackable, entity.ratingEntity)
+                    is TrackableEntity.Time -> createTimeTrackableView(context, trackable, entity.timeEntity)
                 }
                 remoteViews.addView(R.id.grid, item)
             }
             // Instruct the widget manager to update the widget
             appWidgetManager.updateAppWidget(appWidgetId, remoteViews)
         }
+    }
+
+    private fun createTimeTrackableView(
+        context: Context,
+        trackable: Trackable,
+        entity: TimeTrackableEntity
+    ): RemoteViews {
+        val item = RemoteViews(context.packageName, R.layout.time_trackable_item)
+        item.setTextViewText(R.id.text, trackable.title)
+        val timeString = if (entity.time != null) {
+            entity.time.displayableString()
+        } else {
+            "---"
+        }
+        item.setTextViewText(R.id.time, timeString)
+        item.setOnClickPendingIntent(
+            R.id.time,
+            getPendingSelfIntent(context, trackable.title)
+        )
+        return item
     }
 
     private fun createRatingTrackableView(

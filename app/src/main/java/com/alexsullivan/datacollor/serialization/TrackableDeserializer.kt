@@ -7,6 +7,7 @@ import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
 import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
+import com.alexsullivan.datacollor.database.entities.TimeTrackableEntity
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import com.alexsullivan.datacollor.database.entities.WeatherEntity
 import com.alexsullivan.datacollor.serialization.TrackableSerializer.DAILY_TEMP_TITLE
@@ -14,6 +15,7 @@ import com.alexsullivan.datacollor.serialization.TrackableSerializer.DAILY_WEATH
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.LocalDate
+import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeParseException
@@ -62,6 +64,7 @@ object TrackableDeserializer {
                 is TrackableEntity.Boolean -> TrackableType.BOOLEAN
                 is TrackableEntity.Number -> TrackableType.NUMBER
                 is TrackableEntity.Rating -> TrackableType.RATING
+                is TrackableEntity.Time -> TrackableType.TIME
             }
             Trackable(UUID.randomUUID().toString(), title, true, type)
         }
@@ -74,6 +77,7 @@ object TrackableDeserializer {
                     is TrackableEntity.Boolean -> TrackableEntity.Boolean(entity.booleanEntity.copy(trackableId = trackable.id))
                     is TrackableEntity.Number -> TrackableEntity.Number(entity.numberEntity.copy(trackableId = trackable.id))
                     is TrackableEntity.Rating -> TrackableEntity.Rating(entity.ratingEntity.copy(trackableId = trackable.id))
+                    is TrackableEntity.Time -> TrackableEntity.Time(entity.timeEntity.copy(trackableId = trackable.id))
                 }
             }
         }
@@ -117,20 +121,37 @@ object TrackableDeserializer {
 
     private fun constructEntity(data: String, date: LocalDate): TrackableEntity? {
         val numberData = data.toIntOrNull()
-        val rating = data.deserializeToRating()
+        val rating = data.deserializeToRatingOrNull()
         val booleanData = data.toBooleanStrictOrNull()
+        val timeData = data.deserializeToTimeOrNull()
         return when {
             numberData != null -> TrackableEntity.Number(NumberTrackableEntity("", numberData, date))
             rating != null -> TrackableEntity.Rating(RatingTrackableEntity("", rating, date))
             booleanData != null -> TrackableEntity.Boolean(BooleanTrackableEntity("", booleanData, date))
+            timeData != null -> TrackableEntity.Time(TimeTrackableEntity("", timeData.localTime, date))
             else -> null
         }
     }
 
-    private fun String.deserializeToRating(): Rating? {
+    private fun String.deserializeToRatingOrNull(): Rating? {
         val rating = Rating.values().firstOrNull { rating ->
             rating.name.lowercase() == this.lowercase()
         }
         return rating
+    }
+
+    data class TimeContainer(val localTime: LocalTime?)
+
+    private fun String.deserializeToTimeOrNull(): TimeContainer? {
+        return try {
+            val time = LocalTime.parse(this)
+            TimeContainer(time)
+        } catch (e: Exception) {
+            if (this == TrackableSerializer.UNSET_TIME) {
+                TimeContainer(null)
+            } else {
+                null
+            }
+        }
     }
 }

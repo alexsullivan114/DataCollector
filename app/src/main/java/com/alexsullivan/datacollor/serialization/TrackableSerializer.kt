@@ -4,12 +4,14 @@ import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import com.alexsullivan.datacollor.database.entities.WeatherEntity
+import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 object TrackableSerializer {
     const val DAILY_TEMP_TITLE = "DailyTemp"
     const val DAILY_WEATHER_DESCRIPTION_TITLE = "WeatherDescription"
+    const val UNSET_TIME = "null-time"
 
     fun serialize(data: LifetimeData): String {
         val sortedTrackables = data.trackables.sortedBy { it.title }
@@ -33,6 +35,7 @@ object TrackableSerializer {
                 is TrackableEntity.Boolean -> entity.booleanEntity.executed.toString()
                 is TrackableEntity.Number -> entity.numberEntity.count.toString()
                 is TrackableEntity.Rating -> entity.ratingEntity.rating.serialized()
+                is TrackableEntity.Time -> entity.timeEntity.time?.serialized()
             }
             ",${trackable.title},${value}"
         } else {
@@ -55,5 +58,11 @@ object TrackableSerializer {
         if (it.isLowerCase()) it.titlecase(
             Locale.getDefault()
         ) else it.toString()
+    }
+
+    private fun LocalTime?.serialized() = if (this != null) {
+        this.format(DateTimeFormatter.ISO_TIME)
+    } else {
+        UNSET_TIME
     }
 }

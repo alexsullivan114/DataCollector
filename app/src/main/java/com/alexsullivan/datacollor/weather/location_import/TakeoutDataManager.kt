@@ -2,7 +2,6 @@ package com.alexsullivan.datacollor.weather.location_import
 
 import android.content.Context
 import android.location.Location
-import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.database.GetTrackableEntitiesUseCase
 import com.alexsullivan.datacollor.database.daos.WeatherDao
 import com.alexsullivan.datacollor.weather.FetchHistoricalWeatherEntityUseCase
@@ -33,10 +32,10 @@ class TakeoutDataManager @Inject constructor(
     }
 
     suspend fun triggerImport(context: Context) {
-        R.raw::class.java.declaredFields.forEach {
-            val stringData = context.resources.openRawResource(it.getInt(it)).bufferedReader().use { it.readText() }
-            importTakeoutData(stringData)
-        }
+//        R.raw::class.java.declaredFields.forEach {
+//            val stringData = context.resources.openRawResource(it.getInt(it)).bufferedReader().use { it.readText() }
+//            importTakeoutData(stringData)
+//        }
     }
 
     private fun buildDateLocationsForMonth(semanticLocationHistoryMonthString: String): List<DateLocation> {
