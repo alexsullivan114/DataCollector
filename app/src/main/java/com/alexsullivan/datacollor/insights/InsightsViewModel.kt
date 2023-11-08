@@ -115,8 +115,12 @@ class InsightsViewModel @AssistedInject constructor(
         val timeTrackables = trackableManager.getTimeEntities(trackable.id)
         val timeDatePairs = timeTrackables.filter { it.time != null }.map { it.date to it.time!! }
         val times = timeTrackables.mapNotNull { it.time }
-        val averageTime = times.sumOf { it.toSecondOfDay() }  / times.size
-        return UiState.TimeUiState(trackable.title, timeDatePairs, LocalTime.ofSecondOfDay(averageTime.toLong()))
+        val averageTime = times.sumOf { it.toSecondOfDay() } / times.size
+        return UiState.TimeUiState(
+            trackable.title,
+            timeDatePairs,
+            LocalTime.ofSecondOfDay(averageTime.toLong())
+        )
     }
 
     private fun getPerWeekCount(entities: List<BooleanTrackableEntity>): Float {

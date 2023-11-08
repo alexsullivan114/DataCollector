@@ -9,6 +9,6 @@ fun today(): LocalDate {
 }
 
 fun LocalTime.displayableString(): String {
-    val formatter = DateTimeFormatter.ofPattern("HH:mm a")
+    val formatter = DateTimeFormatter.ofPattern("h:mm a")
     return this.format(formatter)
 }
