@@ -6,18 +6,21 @@ import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.R
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
-import com.alexsullivan.datacollor.database.TrackableManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -43,11 +46,14 @@ class InsightsActivity : AppCompatActivity() {
                 topBar = { QLAppBar() },
             ) {
                 val uiState = viewModel.uiFlow.collectAsState()
-                when (val state = uiState.value) {
-                    is InsightsViewModel.UiState.BooleanUiState -> BooleanUi(state)
-                    is InsightsViewModel.UiState.NumericUiState -> NumericUi(state)
-                    is InsightsViewModel.UiState.RatingUiState -> RatingUi(state)
-                    null -> {}
+                Box(modifier = Modifier.padding(it)) {
+                    when (val state = uiState.value) {
+                        is InsightsViewModel.UiState.BooleanUiState -> BooleanUi(state)
+                        is InsightsViewModel.UiState.NumericUiState -> NumericUi(state)
+                        is InsightsViewModel.UiState.RatingUiState -> RatingUi(state)
+                        is InsightsViewModel.UiState.TimeUiState -> TimeUi(state)
+                        null -> {}
+                    }
                 }
             }
 

@@ -18,10 +18,10 @@ import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.database.entities.RatingTrackableEntity
 import com.alexsullivan.datacollor.database.entities.TimeTrackableEntity
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
+import com.alexsullivan.datacollor.utils.displayableString
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import java.time.format.DateTimeFormatter
 
 @DelicateCoroutinesApi
 class CollectorWidget : AppWidgetProvider() {
@@ -127,8 +127,7 @@ class CollectorWidget : AppWidgetProvider() {
         val item = RemoteViews(context.packageName, R.layout.time_trackable_item)
         item.setTextViewText(R.id.text, trackable.title)
         val timeString = if (entity.time != null) {
-            val formatter = DateTimeFormatter.ofPattern("HH:mm a")
-            entity.time.format(formatter)
+            entity.time.displayableString()
         } else {
             "---"
         }

@@ -34,6 +34,7 @@ import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.RatingView
 import com.alexsullivan.datacollor.previousdays.DisplayableTrackableEntity.*
+import com.alexsullivan.datacollor.utils.displayableString
 import com.alexsullivan.datacollor.utils.refreshWidget
 import com.google.android.material.datepicker.CalendarConstraints
 import com.google.android.material.datepicker.DateValidatorPointBackward
@@ -42,7 +43,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.time.LocalTime
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 data class TimeEntityState(val timePickerState: TimePickerState, val entity: TimeEntity)
@@ -183,7 +183,7 @@ class PreviousDaysActivity : AppCompatActivity() {
     private fun TimeEntityView(entity: TimeEntity, onTimeEntityClicked: (TimeEntity) -> Unit) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                entity.time?.format(DateTimeFormatter.ofPattern("HH:mm a")) ?: "---",
+                entity.time?.displayableString() ?: "---",
                 modifier = Modifier
                     .clickable {
                         onTimeEntityClicked(entity)

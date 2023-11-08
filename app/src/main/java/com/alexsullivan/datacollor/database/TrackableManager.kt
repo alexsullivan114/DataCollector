@@ -181,4 +181,8 @@ class TrackableManager(database: TrackableEntityDatabase) {
     suspend fun getRatingEntities(trackableId: String): List<RatingTrackableEntity> {
         return ratingDao.getEntities(trackableId)
     }
+
+    suspend fun getTimeEntities(trackableId: String): List<TimeTrackableEntity> {
+        return timeDao.getEntities(trackableId)
+    }
 }
