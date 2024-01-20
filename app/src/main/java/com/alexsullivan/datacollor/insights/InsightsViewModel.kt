@@ -27,6 +27,7 @@ import java.time.LocalTime
 import java.time.OffsetDateTime
 import java.time.Year
 import java.time.temporal.ChronoUnit
+import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.floor
 
@@ -81,7 +82,10 @@ class InsightsViewModel @AssistedInject constructor(
         }
         return dataGroupedByMonth.map { (key, dateRatings) ->
             val (month, year) = key
-            val title = "$month $year"
+            val title = "${
+                month.toString().lowercase()
+                    .replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
+            } $year"
             val gridDays = dateRatings.map { (date, rating) ->
                 MonthRatingGridDay(date, rating)
             }.toMutableList()

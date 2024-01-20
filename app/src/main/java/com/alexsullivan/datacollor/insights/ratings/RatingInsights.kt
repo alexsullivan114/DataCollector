@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -82,7 +83,7 @@ fun RatingUi(state: InsightsViewModel.UiState.RatingUiState) {
             modifier = Modifier.padding(16.dp)
         )
         state.monthRatings.forEach {
-            Text(text = it.title)
+            Text(text = it.title, style = MaterialTheme.typography.labelLarge)
             Box(modifier = Modifier.fillMaxWidth().height(350.dp)) {
                 MonthRatingGrid(days = it.days)
             }
