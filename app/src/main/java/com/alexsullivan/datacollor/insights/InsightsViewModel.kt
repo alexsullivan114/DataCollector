@@ -12,6 +12,8 @@ import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.BooleanUiState
 import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.NumericUiState
 import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.RatingUiState
+import com.alexsullivan.datacollor.insights.ratings.MonthRating
+import com.alexsullivan.datacollor.insights.ratings.MonthRatingGridDay
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -23,10 +25,12 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.OffsetDateTime
+import java.time.Year
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
 import kotlin.math.floor
 
+// TODO: Migrate this from using TrackableManager to use cases
 class InsightsViewModel @AssistedInject constructor(
     @Assisted private val trackableId: String,
     private val trackableManager: TrackableManager
@@ -66,8 +70,35 @@ class InsightsViewModel @AssistedInject constructor(
             lowestRatedDay = minRatedDay,
             highestRatedDay = maxRatedDay,
             averageRatingBound = averageDayBound,
-            dateRatings = datePairs
+            dateRatings = datePairs,
+            monthRatings = buildMonthRatingGridData(datePairs)
         )
+    }
+
+    private fun buildMonthRatingGridData(datePairs: List<Pair<LocalDate, Rating>>): List<MonthRating> {
+        val dataGroupedByMonth = datePairs.groupBy { (date, _) ->
+            date.month to date.year
+        }
+        return dataGroupedByMonth.map { (key, dateRatings) ->
+            val (month, year) = key
+            val title = "$month $year"
+            val gridDays = dateRatings.map { (date, rating) ->
+                MonthRatingGridDay(date, rating)
+            }.toMutableList()
+            val gridDaysSet = gridDays.map { it.date }.toSet()
+            for (i in 1..month.length(Year.of(year).isLeap)) {
+                val date = LocalDate.of(year, month, i)
+                if (!gridDaysSet.contains(date)) {
+                    if (i < gridDays.size) {
+                        gridDays.add(i, MonthRatingGridDay(date, null))
+                    } else {
+                        gridDays.add(MonthRatingGridDay(date, null))
+                    }
+                }
+            }
+
+            MonthRating(title, gridDays)
+        }
     }
 
     private suspend fun getNumericUiState(trackable: Trackable): NumericUiState {
@@ -171,7 +202,8 @@ class InsightsViewModel @AssistedInject constructor(
             val lowestRatedDay: DayOfWeek,
             val highestRatedDay: DayOfWeek,
             val averageRatingBound: Pair<Rating, Rating>,
-            val dateRatings: List<Pair<LocalDate, Rating>>
+            val dateRatings: List<Pair<LocalDate, Rating>>,
+            val monthRatings: List<MonthRating>
         ) : UiState()
 
         data class TimeUiState(
@@ -180,6 +212,8 @@ class InsightsViewModel @AssistedInject constructor(
             val averageToggledTime: LocalTime
         ) : UiState()
     }
+
+
 
     companion object {
         fun provideFactory(

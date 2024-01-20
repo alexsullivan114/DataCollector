@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor.insights
+package com.alexsullivan.datacollor.insights.ratings
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -18,15 +19,22 @@ import java.util.Locale
 
 
 @Composable
-fun RatingMonth(ratings: List<Pair<LocalDate, Rating>>) {
-    val colorDates = ratings.map { it.first to colorResource(id = it.second.colorRes) }
+fun MonthRatingGrid(days: List<MonthRatingGridDay>) {
+    val colorDates = days.map {
+        val color = if (it.rating != null) {
+            colorResource(it.rating.colorRes)
+        } else {
+            Color.Gray
+        }
+        it.date to color
+    }
     Canvas(modifier = Modifier.fillMaxSize()) {
         // We want our days to be square, so choose the longest axis - either width or height
         val square = size.width.coerceAtMost(size.height)
         // Then we're limited by the number of days in a week, 7, over number of weeks, 5.
         val cellSize = square / 7
+        val numberOfWeeks = days[0].date.numberOfWeeks()
         colorDates.forEach { (date, color) ->
-            val numberOfWeeks = date.numberOfWeeks()
             // Get the week of month
             val weekFields = WeekFields.of(Locale.getDefault())
             val weekOfMonth = date[weekFields.weekOfMonth()] - 1
@@ -71,37 +79,46 @@ private fun LocalDate.numberOfWeeks(): Int {
 @Composable
 fun RatingMonthPreview() {
     val entries = listOf(
-        LocalDate.of(2023, 12, 1) to Rating.GREAT,
-        LocalDate.of(2023, 12, 2) to Rating.GREAT,
-        LocalDate.of(2023, 12, 3) to Rating.GREAT,
-        LocalDate.of(2023, 12, 4) to Rating.GREAT,
-        LocalDate.of(2023, 12, 5) to Rating.GREAT,
-        LocalDate.of(2023, 12, 6) to Rating.GREAT,
-        LocalDate.of(2023, 12, 7) to Rating.GREAT,
-        LocalDate.of(2023, 12, 8) to Rating.GREAT,
-        LocalDate.of(2023, 12, 9) to Rating.GREAT,
-        LocalDate.of(2023, 12, 10) to Rating.GREAT,
-        LocalDate.of(2023, 12, 11) to Rating.GREAT,
-        LocalDate.of(2023, 12, 12) to Rating.GREAT,
-        LocalDate.of(2023, 12, 13) to Rating.GREAT,
-        LocalDate.of(2023, 12, 14) to Rating.GREAT,
-        LocalDate.of(2023, 12, 15) to Rating.GREAT,
-        LocalDate.of(2023, 12, 16) to Rating.GREAT,
-        LocalDate.of(2023, 12, 17) to Rating.GREAT,
-        LocalDate.of(2023, 12, 18) to Rating.GREAT,
-        LocalDate.of(2023, 12, 19) to Rating.GREAT,
-        LocalDate.of(2023, 12, 20) to Rating.GREAT,
-        LocalDate.of(2023, 12, 21) to Rating.GREAT,
-        LocalDate.of(2023, 12, 22) to Rating.GREAT,
-        LocalDate.of(2023, 12, 23) to Rating.GREAT,
-        LocalDate.of(2023, 12, 24) to Rating.MEDIOCRE,
-        LocalDate.of(2023, 12, 25) to Rating.MEDIOCRE,
-        LocalDate.of(2023, 12, 26) to Rating.POOR,
-        LocalDate.of(2023, 12, 27) to Rating.POOR,
-        LocalDate.of(2023, 12, 28) to Rating.GREAT,
-        LocalDate.of(2023, 12, 29) to Rating.GOOD,
-        LocalDate.of(2023, 12, 30) to Rating.GOOD,
-        LocalDate.of(2023, 12, 31) to Rating.TERRIBLE,
+        MonthRatingGridDay(LocalDate.of(2023, 12, 1),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 2),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 3),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 4),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 5),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 6),  null),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 7),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 8),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 9),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 10),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 11),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 12),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 13),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 14),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 15),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 16),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 17),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 18),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 19),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 20),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 21),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 22),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 23),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 24),  Rating.MEDIOCRE),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 25),  Rating.MEDIOCRE),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 26),  Rating.POOR),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 27),  Rating.POOR),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 28),  Rating.GREAT),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 29),  Rating.GOOD),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 30),  Rating.GOOD),
+        MonthRatingGridDay(LocalDate.of(2023, 12, 31),  Rating.TERRIBLE),
     )
-    RatingMonth(entries)
+    MonthRatingGrid(entries)
+}
+
+fun fillMissingDays() {
+//    val colorDates = ratings.map { it.first to colorResource(id = it.second.colorRes) }.sortedBy { it.first }.toMutableList()
+//    for (i in 0 until colorDates.size) {
+//        if (i != 0 && colorDates[i - 1].first != colorDates[i].first.minusDays(1)) {
+//            colorDates.add(i, colorDates[i].first.minusDays(1) to Color.Gray)
+//        }
+//    }
 }

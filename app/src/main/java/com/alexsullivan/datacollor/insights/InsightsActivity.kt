@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.R
+import com.alexsullivan.datacollor.insights.ratings.RatingUi
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
