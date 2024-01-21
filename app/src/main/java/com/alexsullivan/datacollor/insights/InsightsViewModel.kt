@@ -3,8 +3,12 @@ package com.alexsullivan.datacollor.insights
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.alexsullivan.datacollor.database.GetBooleanEntitiesUseCase
+import com.alexsullivan.datacollor.database.GetNumberEntitiesUseCase
+import com.alexsullivan.datacollor.database.GetRatingEntitiesUseCase
+import com.alexsullivan.datacollor.database.GetTimeEntitiesUseCase
+import com.alexsullivan.datacollor.database.GetTrackableUsCase
 import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.TrackableType
 import com.alexsullivan.datacollor.database.entities.BooleanTrackableEntity
 import com.alexsullivan.datacollor.database.entities.NumberTrackableEntity
@@ -31,17 +35,20 @@ import java.util.Locale
 import kotlin.math.ceil
 import kotlin.math.floor
 
-// TODO: Migrate this from using TrackableManager to use cases
 class InsightsViewModel @AssistedInject constructor(
     @Assisted private val trackableId: String,
-    private val trackableManager: TrackableManager
+    private val getTrackable: GetTrackableUsCase,
+    private val getRatingEntities: GetRatingEntitiesUseCase,
+    private val getNumberEntities: GetNumberEntitiesUseCase,
+    private val getBooleanEntities: GetBooleanEntitiesUseCase,
+    private val getTimeEntities: GetTimeEntitiesUseCase,
 ) : ViewModel() {
     private val _uiFlow = MutableStateFlow<UiState?>(null)
     val uiFlow = _uiFlow.asStateFlow()
 
     init {
         viewModelScope.launch {
-            val trackable = trackableManager.getTrackable(trackableId)
+            val trackable = getTrackable(trackableId)
                 ?: throw IllegalStateException("Can't find trackable with id $trackableId")
             val state = when (trackable.type) {
                 TrackableType.BOOLEAN -> getBooleanUiState(trackable)
@@ -54,7 +61,7 @@ class InsightsViewModel @AssistedInject constructor(
     }
 
     private suspend fun getRatingUiState(trackable: Trackable): RatingUiState {
-        val entities = trackableManager.getRatingEntities(trackableId).sortedBy { it.date }
+        val entities = getRatingEntities(trackableId).sortedBy { it.date }
         val datePairs = entities.map { it.date to it.rating }
         val dayAverages = entities.groupBy { it.date.dayOfWeek }.mapValues { (dayOfWeek, entities) ->
             val averageEntitiesRating = (entities.sumOf { it.rating.value }) / entities.size.toFloat()
@@ -106,7 +113,7 @@ class InsightsViewModel @AssistedInject constructor(
     }
 
     private suspend fun getNumericUiState(trackable: Trackable): NumericUiState {
-        val entities = trackableManager.getNumberEntities(trackableId).sortedBy { it.date }
+        val entities = getNumberEntities(trackableId).sortedBy { it.date }
         val datePairs = entities.map { it.date to it.count }
         val totalCount = entities.sumOf { it.count }
         val yearStartCount = getNumericYearStartCount(entities)
@@ -137,7 +144,7 @@ class InsightsViewModel @AssistedInject constructor(
     }
 
     private suspend fun getBooleanUiState(trackable: Trackable): BooleanUiState {
-        val entities = trackableManager.getBooleanEntities(trackableId).sortedBy { it.date }
+        val entities = getBooleanEntities(trackableId).sortedBy { it.date }
 
         val totalCount = getTotalCount(entities)
         val yearStartCount = getYearStartCount(entities)
@@ -147,7 +154,7 @@ class InsightsViewModel @AssistedInject constructor(
     }
 
     private suspend fun getTimeUiState(trackable: Trackable): UiState.TimeUiState {
-        val timeTrackables = trackableManager.getTimeEntities(trackable.id)
+        val timeTrackables = getTimeEntities(trackable.id)
         val timeDatePairs = timeTrackables.filter { it.time != null }.map { it.date to it.time!! }
         val times = timeTrackables.mapNotNull { it.time }
         val averageTime = times.sumOf { it.toSecondOfDay() } / times.size
