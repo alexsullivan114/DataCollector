@@ -165,24 +165,4 @@ class TrackableManager(database: TrackableEntityDatabase) {
         val timeEntities = timeDao.getEntities(today()).map { TrackableEntity.Time(it) }
         return booleanEntities + numberEntities + ratingEntities + timeEntities
     }
-
-    suspend fun getTrackable(id: String): Trackable? {
-        return trackableDao.getTrackableById(id)
-    }
-
-    suspend fun getBooleanEntities(trackableId: String): List<BooleanTrackableEntity> {
-        return booleanDao.getEntities(trackableId)
-    }
-
-    suspend fun getNumberEntities(trackableId: String): List<NumberTrackableEntity> {
-        return numberDao.getEntities(trackableId)
-    }
-
-    suspend fun getRatingEntities(trackableId: String): List<RatingTrackableEntity> {
-        return ratingDao.getEntities(trackableId)
-    }
-
-    suspend fun getTimeEntities(trackableId: String): List<TimeTrackableEntity> {
-        return timeDao.getEntities(trackableId)
-    }
 }
