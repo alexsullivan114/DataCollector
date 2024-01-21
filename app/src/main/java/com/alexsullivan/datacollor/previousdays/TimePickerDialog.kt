@@ -36,6 +36,7 @@ fun TimePickerDialog(
     ) {
         Surface(
             shape = MaterialTheme.shapes.large,
+            shadowElevation = 6.dp,
             modifier = Modifier
                 .width(IntrinsicSize.Min)
                 .height(IntrinsicSize.Min)

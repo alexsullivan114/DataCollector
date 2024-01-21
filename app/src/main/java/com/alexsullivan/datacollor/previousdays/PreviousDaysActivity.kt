@@ -15,6 +15,10 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DatePickerState
+import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -43,13 +47,10 @@ import com.alexsullivan.datacollor.RatingView
 import com.alexsullivan.datacollor.previousdays.DisplayableTrackableEntity.*
 import com.alexsullivan.datacollor.utils.displayableString
 import com.alexsullivan.datacollor.utils.refreshWidget
-import com.google.android.material.datepicker.CalendarConstraints
-import com.google.android.material.datepicker.DateValidatorPointBackward
-import com.google.android.material.datepicker.MaterialDatePicker
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import java.time.LocalTime
-import java.time.ZoneOffset
 
 @OptIn(ExperimentalMaterial3Api::class)
 data class TimeEntityState(val timePickerState: TimePickerState, val entity: TimeEntity)
@@ -64,26 +65,55 @@ class PreviousDaysActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             AppTheme {
+                var datePickerState by remember { mutableStateOf<DatePickerState?>(null) }
                 Scaffold(
-                    topBar = { QLAppBar() }
+                    topBar = { QLAppBar(onDateSelected = {
+                       datePickerState = DatePickerState(
+                           initialDisplayedMonthMillis = null,
+                           initialSelectedDateMillis = null,
+                           yearRange = 1900..LocalDate.now().year,
+                           initialDisplayMode = DisplayMode.Picker
+                       )
+                    }) }
                 ) { paddingValues ->
-                    var woofers by remember { mutableStateOf<TimeEntityState?>(null) }
+                    var timeEntityState by remember { mutableStateOf<TimeEntityState?>(null) }
                     TrackableEntitiesList(Modifier.padding(paddingValues)) {
                         val hour = it.time?.hour ?: 0
                         val minute = it.time?.minute ?: 0
                         val timePickerState = TimePickerState(hour, minute, false)
-                        woofers = TimeEntityState(timePickerState, it)
+                        timeEntityState = TimeEntityState(timePickerState, it)
                     }
-                    if (woofers != null) {
-                        TimePickerDialog(onCancel = { woofers = null }, onConfirm = {
-                            val localTime = LocalTime.of(woofers!!.timePickerState.hour, woofers!!.timePickerState.minute)
-                            viewModel.timeEntityChanged(woofers!!.entity, localTime)
-                            woofers = null
+                    if (timeEntityState != null) {
+                        TimePickerDialog(onCancel = { timeEntityState = null }, onConfirm = {
+                            val localTime = LocalTime.of(
+                                timeEntityState!!.timePickerState.hour,
+                                timeEntityState!!.timePickerState.minute
+                            )
+                            viewModel.timeEntityChanged(timeEntityState!!.entity, localTime)
+                            timeEntityState = null
                         }) {
-                            TimePicker(state = woofers!!.timePickerState)
+                            TimePicker(state = timeEntityState!!.timePickerState)
                         }
                     }
-
+                    if (datePickerState != null) {
+                        DatePickerDialog(
+                            onDismissRequest = { datePickerState = null },
+                            confirmButton = {
+                                Text(
+                                    text = getString(android.R.string.ok),
+                                    modifier = Modifier
+                                        .clickable {
+                                            viewModel.dateSelected(
+                                                datePickerState!!.selectedDateMillis!!
+                                            )
+                                            datePickerState = null
+                                        }
+                                        .padding(16.dp)
+                                )
+                            }) {
+                            DatePicker(state = datePickerState!!)
+                        }
+                    }
                 }
             }
         }
@@ -96,7 +126,7 @@ class PreviousDaysActivity : AppCompatActivity() {
     }
 
     @Composable
-    private fun QLAppBar() {
+    private fun QLAppBar(onDateSelected: () -> Unit) {
         val uiState by viewModel.uiFlow.collectAsState()
         TopAppBar(title = {
             Row(
@@ -110,7 +140,8 @@ class PreviousDaysActivity : AppCompatActivity() {
                 Text(
                     uiState.date,
                     style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.clickable { showDatePicker() })
+                    modifier = Modifier.clickable(onClick = onDateSelected)
+                )
                 IconButton(onClick = viewModel::nextDayPressed, enabled = !uiState.disableNext) {
                     Icon(Icons.Filled.ArrowForward, "Next Day")
                 }
@@ -198,19 +229,5 @@ class PreviousDaysActivity : AppCompatActivity() {
                     }
                     .padding(top = 10.dp))
         }
-    }
-
-    private fun showDatePicker() {
-        val calendarConstraints = CalendarConstraints.Builder()
-            .setValidator(DateValidatorPointBackward.now())
-            .setOpenAt(viewModel.getDate().atTime(0,0).toInstant(ZoneOffset.UTC).toEpochMilli())
-            .build()
-        val dialog = MaterialDatePicker.Builder.datePicker()
-            .setCalendarConstraints(calendarConstraints)
-            .build()
-        dialog.addOnPositiveButtonClickListener {
-            viewModel.dateSelected(it)
-        }
-        dialog.show(supportFragmentManager, "DatePicker")
     }
 }
