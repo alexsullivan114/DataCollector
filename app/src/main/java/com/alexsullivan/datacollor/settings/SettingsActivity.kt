@@ -7,26 +7,20 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import com.alexsullivan.datacollor.*
 import com.alexsullivan.datacollor.R
-import com.alexsullivan.datacollor.database.GetTrackableEntitiesUseCase
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
-import com.alexsullivan.datacollor.database.TrackableManager
-import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
-import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
 import dagger.hilt.android.AndroidEntryPoint
 
+@OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class SettingsActivity : AppCompatActivity() {
     private val viewModel: SettingsViewModel by viewModels()
@@ -49,7 +43,7 @@ class SettingsActivity : AppCompatActivity() {
                             })
                     }
                 ) {
-                    LazyColumn(modifier = Modifier.padding(16.dp)) {
+                    LazyColumn(modifier = Modifier.padding(it).padding(16.dp)) {
                         item {
                             BackupToDriveSetting()
                         }

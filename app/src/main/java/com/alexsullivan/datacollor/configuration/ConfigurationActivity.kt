@@ -1,5 +1,4 @@
 package com.alexsullivan.datacollor.configuration
-
 import android.app.Activity
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
@@ -11,9 +10,19 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DismissDirection
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SwipeToDismiss
+import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDismissState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,21 +30,14 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.CollectorWidget
 import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.database.TrackableEntityDatabase
-import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.home.AddTrackableDialog
-import com.alexsullivan.datacollor.UpdateTrackablesUseCase
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
-@ExperimentalMaterialApi
 @AndroidEntryPoint
 class ConfigurationActivity : AppCompatActivity() {
     private val viewModel: ConfigurationViewModel by viewModels()
@@ -54,6 +56,7 @@ class ConfigurationActivity : AppCompatActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun TrackableList(modifier: Modifier = Modifier) {
         var showDialog by remember { mutableStateOf(false) }
@@ -67,7 +70,9 @@ class ConfigurationActivity : AppCompatActivity() {
                 }
             ) {
                 LazyColumn(
-                    modifier = modifier.fillMaxWidth(),
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(it),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     item {
@@ -89,9 +94,10 @@ class ConfigurationActivity : AppCompatActivity() {
                             }
                             SwipeToDismiss(
                                 state = dismissState,
-                                background = { Box(modifier = Modifier.background(Color.Red)) }) {
-                                TrackableItem(trackable)
-                            }
+                                background = { Box(modifier = Modifier.background(Color.Red)) },
+                                dismissContent = {
+                                    TrackableItem(trackable)
+                                })
                         }
                     }
                     item {

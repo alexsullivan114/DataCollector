@@ -18,6 +18,18 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Divider
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -56,7 +68,6 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-@ExperimentalMaterialApi
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
@@ -117,7 +128,7 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             ) {
-                TrackableItemList(modifier = modifier, showAddDialog, showDeleteDialog)
+                TrackableItemList(modifier = modifier.padding(it), showAddDialog, showDeleteDialog)
             }
 
         }
@@ -181,6 +192,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun QLAppBar() {
         var showOptionsDropdown by remember { mutableStateOf(false) }
@@ -193,18 +205,23 @@ class MainActivity : AppCompatActivity() {
                 DropdownMenu(
                     expanded = showOptionsDropdown,
                     onDismissRequest = { showOptionsDropdown = false }) {
-                    DropdownMenuItem(onClick = {
-                        showOptionsDropdown = false
-                        startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
-                    }) {
-                        Text("Settings")
-                    }
-                    DropdownMenuItem(onClick = {
-                        showOptionsDropdown = false
-                        startActivity(Intent(this@MainActivity, PreviousDaysActivity::class.java))
-                    }) {
-                        Text("Past Days")
-                    }
+                    DropdownMenuItem(
+                        text = { Text("Settings") },
+                        onClick = {
+                            showOptionsDropdown = false
+                            startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
+                        })
+                    DropdownMenuItem(
+                        text = { Text("Past Days") },
+                        onClick = {
+                            showOptionsDropdown = false
+                            startActivity(
+                                Intent(
+                                    this@MainActivity,
+                                    PreviousDaysActivity::class.java
+                                )
+                            )
+                        })
                 }
             }
         )

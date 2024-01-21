@@ -14,9 +14,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -47,6 +54,7 @@ import java.time.ZoneOffset
 @OptIn(ExperimentalMaterial3Api::class)
 data class TimeEntityState(val timePickerState: TimePickerState, val entity: TimeEntity)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class PreviousDaysActivity : AppCompatActivity() {
     private val viewModel: PreviousDaysViewModel by viewModels()
@@ -90,24 +98,24 @@ class PreviousDaysActivity : AppCompatActivity() {
     @Composable
     private fun QLAppBar() {
         val uiState by viewModel.uiFlow.collectAsState()
-        TopAppBar {
+        TopAppBar(title = {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 IconButton(onClick = viewModel::previousDayPressed) {
                     Icon(Icons.Filled.ArrowBack, "Previous Day")
                 }
                 Text(
                     uiState.date,
-                    style = MaterialTheme.typography.h6,
+                    style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.clickable { showDatePicker() })
                 IconButton(onClick = viewModel::nextDayPressed, enabled = !uiState.disableNext) {
                     Icon(Icons.Filled.ArrowForward, "Next Day")
                 }
             }
-        }
+        })
     }
 
     @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
