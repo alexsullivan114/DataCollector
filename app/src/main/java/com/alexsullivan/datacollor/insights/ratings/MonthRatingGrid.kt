@@ -113,12 +113,3 @@ fun RatingMonthPreview() {
     )
     MonthRatingGrid(entries)
 }
-
-fun fillMissingDays() {
-//    val colorDates = ratings.map { it.first to colorResource(id = it.second.colorRes) }.sortedBy { it.first }.toMutableList()
-//    for (i in 0 until colorDates.size) {
-//        if (i != 0 && colorDates[i - 1].first != colorDates[i].first.minusDays(1)) {
-//            colorDates.add(i, colorDates[i].first.minusDays(1) to Color.Gray)
-//        }
-//    }
-}
