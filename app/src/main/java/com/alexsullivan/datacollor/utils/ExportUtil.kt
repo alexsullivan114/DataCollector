@@ -12,7 +12,10 @@ import java.io.File
 import java.io.FileWriter
 import javax.inject.Inject
 
-class ExportUtil @Inject constructor(private val activity: Activity, private val getLifetimeData: GetLifetimeDataUseCase) {
+class ExportUtil @Inject constructor(
+    private val activity: Activity,
+    private val getLifetimeData: GetLifetimeDataUseCase
+) {
 
     suspend fun export() {
         withContext(Dispatchers.IO) {
