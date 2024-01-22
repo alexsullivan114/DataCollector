@@ -103,9 +103,7 @@ class PreviousDaysActivity : AppCompatActivity() {
                                     text = getString(android.R.string.ok),
                                     modifier = Modifier
                                         .clickable {
-                                            viewModel.dateSelected(
-                                                datePickerState!!.selectedDateMillis!!
-                                            )
+                                            datePickerState?.selectedDateMillis?.let(viewModel::dateSelected)
                                             datePickerState = null
                                         }
                                         .padding(16.dp)
