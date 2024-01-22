@@ -24,38 +24,31 @@ import java.util.UUID
 object TrackableDeserializer {
 
     fun deserialize(contents: String): LifetimeData {
+        // Get all of the headers.
+        val headers = mutableListOf<String>()
+        contents.substringBefore("\n").split(",").forEach(headers::add)
         val trackableTitleMap = mutableMapOf<String, List<TrackableEntity?>>()
         val weatherList = mutableListOf<WeatherEntity>()
         // Go through the data and parse out trackable title, entity value, and weather
-        contents.trim().split("\n").map {
+        contents.substringAfter("\n").trim().split("\n").map {
             val csvs = it.split(",")
-            // First should be the date
-            val date = parseDate(csvs[0])
-            // Then pairs of Trackable -> some type
-            val trackablePairStrings = csvs.subList(1, csvs.size)
-            var i = 0
-            while (i < trackablePairStrings.lastIndex) {
-                // Check titles of current title/data pair and the next title/data pair
-                if (isWeather(trackablePairStrings.getOrNull(i), trackablePairStrings.getOrNull(i+2))) {
-                    // It's weather, so parse out the data from the current title/data pair and the
-                    // data from the next title/data pair
-                    val weather = parseWeather(
-                        date,
-                        trackablePairStrings.getOrNull(i + 1),
-                        trackablePairStrings.getOrNull(i + 3)
-                    )
-                    weather?.let(weatherList::add)
-                    i += 4
-                    continue
+            var processingDate: LocalDate? = null
+            var dailyTemp: String? = null
+            var weatherDescription: String? = null
+            csvs.forEachIndexed { index, value ->
+                // The date should always be our first item.
+                when (index) {
+                    0 -> processingDate = parseDate(value)
+                    headers.indexOf(DAILY_TEMP_TITLE) -> dailyTemp = value
+                    headers.indexOf(DAILY_WEATHER_DESCRIPTION_TITLE) -> weatherDescription = value
+                    else -> constructEntity(value, processingDate!!)?.let { entity ->
+                        val entities = trackableTitleMap[headers[index]] ?: emptyList()
+                        val updatedEntities = entities + entity
+                        trackableTitleMap[headers[index]] = updatedEntities
+                    }
                 }
-                val trackableTitle = trackablePairStrings[i]
-                val data = trackablePairStrings[i + 1]
-                val entity = constructEntity(data, date)
-                val entities = trackableTitleMap[trackableTitle] ?: emptyList()
-                val updatedEntities = entities + entity
-                trackableTitleMap[trackableTitle] = updatedEntities
-                i+=2
             }
+            parseWeather(processingDate!!, dailyTemp, weatherDescription)?.let(weatherList::add)
         }
         // Create actual map of trackables to trackable entities. Note that the entities at this
         // point do not have a populated trackable ID field.
@@ -84,7 +77,9 @@ object TrackableDeserializer {
 
         val trackables = populatedTrackableMap.keys.toList()
         val entitesByDate = populatedTrackableMap.values.flatten().groupBy { it.date }
-        val days = entitesByDate.map { (date, entities) -> DayData(date, entities, null) }
+        val days = entitesByDate.map { (date, entities) ->
+            DayData(date, entities, weatherList.firstOrNull { it.date == date })
+        }
         return LifetimeData(trackables, days)
     }
 

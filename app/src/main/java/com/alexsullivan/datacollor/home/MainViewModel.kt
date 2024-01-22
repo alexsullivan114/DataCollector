@@ -42,12 +42,6 @@ class MainViewModel @Inject constructor(
                     _triggerUpdateWidgetsFlow.send(Unit)
                 }
         }
-
-        viewModelScope.launch {
-            itemsFlow.collect {
-                print("Wooferino")
-            }
-        }
     }
 
     fun trackableToggled(trackable: Trackable, checked: Boolean) = viewModelScope.launch {

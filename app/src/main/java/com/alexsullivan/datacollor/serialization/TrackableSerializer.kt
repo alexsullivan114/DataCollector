@@ -1,6 +1,5 @@
 package com.alexsullivan.datacollor.serialization
 
-import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.entities.Rating
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
 import com.alexsullivan.datacollor.database.entities.WeatherEntity
@@ -15,21 +14,24 @@ object TrackableSerializer {
 
     fun serialize(data: LifetimeData): String {
         val sortedTrackables = data.trackables.sortedBy { it.title }
+        var csv = "Date,"
+        csv+= sortedTrackables.joinToString(",") { it.title }
+        csv += ",${DAILY_TEMP_TITLE},${DAILY_WEATHER_DESCRIPTION_TITLE}\n"
         val csvText = data.days.sortedBy { it.date }.map { (date, entities, weather) ->
             var entry = date.format(DateTimeFormatter.ISO_LOCAL_DATE)
             sortedTrackables.forEach { trackable ->
                 val associatedEntity = entities.firstOrNull { it.trackableId == trackable.id }
-                val dataString = serializeEntity(trackable, associatedEntity)
+                val dataString = serializeEntity(associatedEntity)
                 entry += dataString
             }
             entry += serializeWeather(weather)
             entry
-        }.fold("") { acc, entity -> acc + entity + "\n" }
+        }.fold(csv) { acc, entity -> acc + entity + "\n" }
         return csvText
     }
 
 
-    private fun serializeEntity(trackable: Trackable, entity: TrackableEntity?): String {
+    private fun serializeEntity(entity: TrackableEntity?): String {
         return if (entity != null) {
             val value = when (entity) {
                 is TrackableEntity.Boolean -> entity.booleanEntity.executed.toString()
@@ -37,14 +39,14 @@ object TrackableSerializer {
                 is TrackableEntity.Rating -> entity.ratingEntity.rating.serialized()
                 is TrackableEntity.Time -> entity.timeEntity.time?.serialized()
             }
-            ",${trackable.title},${value}"
+            ",${value}"
         } else {
-            ",${trackable.title},"
+            ","
         }
     }
 
     private fun serializeWeather(weatherEntity: WeatherEntity?): String {
-        var returnString = ",$DAILY_TEMP_TITLE,%s,$DAILY_WEATHER_DESCRIPTION_TITLE,%s"
+        var returnString = ",%s,%s"
         if (weatherEntity != null) {
             returnString =
                 returnString.format(weatherEntity.temp.toString(), weatherEntity.description)
