@@ -1,19 +1,32 @@
 package com.alexsullivan.datacollor.home
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.database.TrackableType
-import java.util.*
+import java.util.Locale
+import java.util.UUID
 
 @Composable
 fun AddTrackableDialog(onDismiss: () -> Unit, onDone: (Trackable) -> Unit) {
@@ -22,7 +35,7 @@ fun AddTrackableDialog(onDismiss: () -> Unit, onDone: (Trackable) -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column {
-                Text(modifier = Modifier.padding(16.dp), text = "Add item to track")
+                Text(modifier = Modifier.padding(16.dp), text = "Add item to track", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
@@ -41,7 +54,7 @@ fun AddTrackableDialog(onDismiss: () -> Unit, onDone: (Trackable) -> Unit) {
                     TextButton(onClick = {
                         val trackable = Trackable(UUID.randomUUID().toString(), text, true, selectedType)
                         onDone(trackable)
-                    }) {
+                    }, enabled = text.isNotEmpty()) {
                         Text("Ok")
                     }
                 }
@@ -70,7 +83,7 @@ private fun TrackableTypeOptions(
                 RadioButton(
                     selected = selectedType == trackableType,
                     onClick = { onTypeSelected(trackableType) })
-                Text(typeTitle, modifier = Modifier.padding(start = 8.dp))
+                Text(typeTitle, modifier = Modifier.padding(start = 8.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
         }
     }

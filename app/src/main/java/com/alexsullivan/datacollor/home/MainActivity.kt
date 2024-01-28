@@ -282,7 +282,7 @@ class MainActivity : AppCompatActivity() {
     @Composable
     fun OptionsBottomSheet(trackable: Trackable, onDismiss: () -> Unit, onDelete: () -> Unit) {
         ModalBottomSheet(onDismissRequest = onDismiss) {
-            Column(modifier = Modifier.padding(16.dp)) {
+            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp)) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier
