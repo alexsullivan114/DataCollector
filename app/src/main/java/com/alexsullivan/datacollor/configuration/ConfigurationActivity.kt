@@ -31,10 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
+import com.alexsullivan.datacollor.AddTrackableDialog
 import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.CollectorWidget
 import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.home.AddTrackableDialog
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 

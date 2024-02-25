@@ -1,59 +1,19 @@
 package com.alexsullivan.datacollor.home
 
 import android.Manifest
-import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.Divider
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import androidx.work.*
-import com.alexsullivan.datacollor.*
-import com.alexsullivan.datacollor.R
-import com.alexsullivan.datacollor.database.Trackable
+import androidx.work.Constraints
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.NetworkType
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
-import com.alexsullivan.datacollor.insights.InsightsActivity
-import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
-import com.alexsullivan.datacollor.settings.SettingsActivity
-import com.alexsullivan.datacollor.utils.ExportUtil
 import com.alexsullivan.datacollor.utils.refreshWidget
 import com.alexsullivan.datacollor.weather.WeatherWorker
 import com.alexsullivan.datacollor.weather.location_import.TakeoutDataManager
@@ -66,11 +26,9 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
-@OptIn(ExperimentalMaterial3Api::class)
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
-    @Inject lateinit var exportUtil: ExportUtil
     @Inject lateinit var takeoutDataManager: TakeoutDataManager
 
     private val googleSignInLauncher =
@@ -96,7 +54,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            Screen()
+            HomeScreen()
         }
 
         lifecycleScope.launch {
@@ -112,201 +70,6 @@ class MainActivity : AppCompatActivity() {
 
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_COARSE_LOCATION)
         signInToGoogle()
-    }
-
-    @Composable
-    fun Screen(modifier: Modifier = Modifier) {
-        val showAddDialog = remember { mutableStateOf(false) }
-        val showDeleteDialog = remember { mutableStateOf<Trackable?>(null) }
-        val showBottomSheet = remember { mutableStateOf<Trackable?>(null) }
-        AppTheme {
-            Scaffold(
-                topBar = { QLAppBar() },
-                floatingActionButton = {
-                    FloatingActionButton(onClick = { showAddDialog.value = true }) {
-                        Icon(Icons.Filled.Add, "Add")
-                    }
-                }
-            ) {
-                TrackableItemList(
-                    modifier = modifier.padding(it),
-                    showAddDialog,
-                    showDeleteDialog,
-                    showBottomSheet
-                )
-            }
-
-        }
-    }
-
-    @Composable
-    fun TrackableItemList(
-        modifier: Modifier,
-        showAddDialog: MutableState<Boolean>,
-        showDeleteDialog: MutableState<Trackable?>,
-        showBottomSheet: MutableState<Trackable?>
-    ) {
-        val trackables by viewModel.itemsFlow.collectAsState()
-        LazyColumn(
-            modifier = modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            item {
-                Text(
-                    text = "Toggle to add tracking to the widget",
-                    fontSize = 18.sp,
-                    fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-            trackables.sortedBy { it.title }.forEach { trackable ->
-                item(key = trackable.id) {
-                    TrackableItem(trackable, modifier = Modifier.pointerInput(Unit) {
-                        detectTapGestures(onLongPress = {
-                            showDeleteDialog.value = trackable
-                        }, onTap = {
-                            startActivity(
-                                InsightsActivity.getIntent(
-                                    trackable.id,
-                                    this@MainActivity
-                                )
-                            )
-                        })
-                    }, onOptionsSelected = { showBottomSheet.value = trackable })
-                }
-                // Update our bottom sheet value if we're currently showing it.
-                if (trackable.id == showBottomSheet.value?.id) {
-                    showBottomSheet.value = trackable
-                }
-            }
-            item {
-                ExportButton()
-            }
-        }
-        if (showAddDialog.value) {
-            AddTrackableDialog(
-                onDismiss = { showAddDialog.value = false },
-                onDone = {
-                    showAddDialog.value = false
-                    viewModel.trackableAdded(it)
-                }
-            )
-        }
-        showDeleteDialog.value?.let { trackable ->
-            DeleteTrackableDialog(onDelete = {
-                showDeleteDialog.value = null
-                viewModel.trackableDeleted(it)
-            }, onCancel = {
-                showDeleteDialog.value = null
-            }, trackable = trackable)
-        }
-        showBottomSheet.value?.let { trackable ->
-            OptionsBottomSheet(
-                trackable = trackable,
-                onDismiss = { showBottomSheet.value = null }
-            ) {
-                showBottomSheet.value = null
-                showDeleteDialog.value = trackable
-            }
-        }
-    }
-
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun QLAppBar() {
-        var showOptionsDropdown by remember { mutableStateOf(false) }
-        TopAppBar(
-            title = { Text(stringResource(R.string.app_name)) },
-            actions = {
-                IconButton(onClick = { showOptionsDropdown = true }) {
-                    Icon(Icons.Filled.MoreVert, "Menu")
-                }
-                DropdownMenu(
-                    expanded = showOptionsDropdown,
-                    onDismissRequest = { showOptionsDropdown = false }) {
-                    DropdownMenuItem(
-                        text = { Text("Settings") },
-                        onClick = {
-                            showOptionsDropdown = false
-                            startActivity(Intent(this@MainActivity, SettingsActivity::class.java))
-                        })
-                    DropdownMenuItem(
-                        text = { Text("Past Days") },
-                        onClick = {
-                            showOptionsDropdown = false
-                            startActivity(
-                                Intent(
-                                    this@MainActivity,
-                                    PreviousDaysActivity::class.java
-                                )
-                            )
-                        })
-                }
-            }
-        )
-    }
-
-    @Composable
-    fun TrackableItem(
-        trackable: Trackable,
-        modifier: Modifier = Modifier,
-        onOptionsSelected: () -> Unit
-    ) {
-        Row(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(trackable.title)
-            Icon(
-                painter = painterResource(R.drawable.more_horiz),
-                "options",
-                modifier = Modifier.clickable(onClick = onOptionsSelected)
-            )
-        }
-        Divider()
-    }
-
-    @Composable
-    fun ExportButton(modifier: Modifier = Modifier) {
-        Button(modifier = modifier
-            .padding(16.dp)
-            .fillMaxWidth(), onClick = this::export
-        ) {
-            Text("Export")
-        }
-    }
-
-    @Composable
-    fun OptionsBottomSheet(trackable: Trackable, onDismiss: () -> Unit, onDelete: () -> Unit) {
-        ModalBottomSheet(onDismissRequest = onDismiss) {
-            Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp)) {
-                Row(
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(text = "Enabled", style = MaterialTheme.typography.titleLarge)
-                    Checkbox(
-                        checked = trackable.enabled,
-                        onCheckedChange = { viewModel.trackableToggled(trackable, it) }
-                    )
-                }
-                Text(
-                    text = "Delete",
-                    style = MaterialTheme.typography.titleLarge.copy(color = Color.Red),
-                    modifier = Modifier.clickable(onClick = onDelete)
-                )
-            }
-        }
-    }
-
-    private fun export() {
-        lifecycleScope.launchWhenCreated { exportUtil.export() }
     }
 
     private fun signInToGoogle() {

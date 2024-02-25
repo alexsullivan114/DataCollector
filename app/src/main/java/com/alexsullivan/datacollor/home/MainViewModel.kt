@@ -9,6 +9,7 @@ import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.daos.WeatherDao
 import com.alexsullivan.datacollor.drive.BackupTrackablesUseCase
 import com.alexsullivan.datacollor.serialization.TrackableDeserializer
+import com.alexsullivan.datacollor.utils.ExportUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,8 @@ class MainViewModel @Inject constructor(
     private val updateTrackablesUseCase: UpdateTrackablesUseCase,
     private val backupTrackablesUseCase: BackupTrackablesUseCase,
     private val prefs: QLPreferences,
-    private val weatherDao: WeatherDao
+    private val weatherDao: WeatherDao,
+    private val exportUtil: ExportUtil
 ): ViewModel() {
     private val _itemsFlow = MutableStateFlow(emptyList<Trackable>())
     private val _triggerUpdateWidgetsFlow = Channel<Unit>()
@@ -80,5 +82,9 @@ class MainViewModel @Inject constructor(
             }
             _triggerPeriodicWorkFlow.send(Unit)
         }
+    }
+
+    fun export() {
+        viewModelScope.launch { exportUtil.export() }
     }
 }
