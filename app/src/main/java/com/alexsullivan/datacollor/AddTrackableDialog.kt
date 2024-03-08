@@ -57,16 +57,16 @@ fun AddTrackableDialog(onDismiss: () -> Unit, onDone: (Trackable) -> Unit) {
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = {
+                        onDismiss()
+                    }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = {
                         val trackable =
                             Trackable(UUID.randomUUID().toString(), text, true, selectedType)
                         onDone(trackable)
                     }, enabled = text.isNotEmpty()) {
-                        Text("Ok")
-                    }
-                    TextButton(onClick = {
-                        onDismiss()
-                    }, enabled = text.isNotEmpty()) {
-                        Text("Cancel")
+                        Text("Add")
                     }
                 }
             }
