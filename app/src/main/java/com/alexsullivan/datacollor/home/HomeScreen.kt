@@ -46,7 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.compose.rememberNavController
 import com.alexsullivan.datacollor.AddTrackableDialog
 import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.DeleteTrackableDialog
@@ -54,16 +55,15 @@ import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.database.Trackable
 import com.alexsullivan.datacollor.insights.InsightsActivity
 import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
-import com.alexsullivan.datacollor.settings.SettingsActivity
 
 @Composable
-fun HomeScreen(modifier: Modifier = Modifier) {
+fun HomeScreen(onNavigateToSettings: () -> Unit) {
     val showAddDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf<Trackable?>(null) }
     val showBottomSheet = remember { mutableStateOf<Trackable?>(null) }
     AppTheme {
         Scaffold(
-            topBar = { QLAppBar() },
+            topBar = { QLAppBar(onNavigateToSettings) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { showAddDialog.value = true }) {
                     Icon(Icons.Filled.Add, "Add")
@@ -71,10 +71,10 @@ fun HomeScreen(modifier: Modifier = Modifier) {
             }
         ) {
             TrackableItemList(
-                modifier = modifier.padding(it),
+                modifier = Modifier.padding(it),
                 showAddDialog,
                 showDeleteDialog,
-                showBottomSheet
+                showBottomSheet,
             )
         }
 
@@ -86,9 +86,9 @@ fun TrackableItemList(
     modifier: Modifier,
     showAddDialog: MutableState<Boolean>,
     showDeleteDialog: MutableState<Trackable?>,
-    showBottomSheet: MutableState<Trackable?>
+    showBottomSheet: MutableState<Trackable?>,
 ) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val context = LocalContext.current
     val trackables by viewModel.itemsFlow.collectAsState()
     LazyColumn(
@@ -158,9 +158,10 @@ fun TrackableItemList(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QLAppBar() {
+fun QLAppBar(onNavigateToSettings: () -> Unit) {
     var showOptionsDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val navController = rememberNavController()
     TopAppBar(
         title = { Text(stringResource(R.string.app_name)) },
         actions = {
@@ -174,7 +175,7 @@ fun QLAppBar() {
                     text = { Text("Settings") },
                     onClick = {
                         showOptionsDropdown = false
-                        startActivity(context, Intent(context, SettingsActivity::class.java), null)
+                        onNavigateToSettings()
                     })
                 DropdownMenuItem(
                     text = { Text("Past Days") },
@@ -218,7 +219,7 @@ fun TrackableItem(
 
 @Composable
 fun ExportButton(modifier: Modifier = Modifier) {
-    val viewModel = viewModel<MainViewModel>()
+    val viewModel: MainViewModel = hiltViewModel()
     Button(modifier = modifier
         .padding(16.dp)
         .fillMaxWidth(), onClick = viewModel::export
@@ -229,7 +230,7 @@ fun ExportButton(modifier: Modifier = Modifier) {
 
 @Composable
 fun OptionsBottomSheet(trackable: Trackable, onDismiss: () -> Unit, onDelete: () -> Unit) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp)) {
             Row(

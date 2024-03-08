@@ -8,12 +8,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import androidx.work.Constraints
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
+import com.alexsullivan.datacollor.settings.SettingsScreen
 import com.alexsullivan.datacollor.utils.refreshWidget
 import com.alexsullivan.datacollor.weather.WeatherWorker
 import com.alexsullivan.datacollor.weather.location_import.TakeoutDataManager
@@ -54,7 +58,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            HomeScreen()
+            val navController = rememberNavController()
+            NavHost(navController = navController, startDestination = "Home") {
+                composable("Home") { HomeScreen(onNavigateToSettings = { navController.navigate("Settings") }) }
+                composable("Settings") { SettingsScreen(onNavigateBack = { navController.popBackStack() }) }
+            }
         }
 
         lifecycleScope.launch {
