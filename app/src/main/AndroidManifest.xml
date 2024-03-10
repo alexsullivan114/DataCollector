@@ -30,7 +30,6 @@
             </intent-filter>
         </activity>
         <activity android:name=".previousdays.PreviousDaysActivity" />
-        <activity android:name=".insights.InsightsActivity" />
 
         <receiver android:name=".CollectorWidget" android:exported="false">
             <intent-filter>

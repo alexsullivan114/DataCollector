@@ -53,11 +53,10 @@ import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.DeleteTrackableDialog
 import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.insights.InsightsActivity
 import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
 
 @Composable
-fun HomeScreen(onNavigateToSettings: () -> Unit) {
+fun HomeScreen(onNavigateToSettings: () -> Unit, onNavigateToInsights: (String) -> Unit) {
     val showAddDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf<Trackable?>(null) }
     val showBottomSheet = remember { mutableStateOf<Trackable?>(null) }
@@ -75,6 +74,7 @@ fun HomeScreen(onNavigateToSettings: () -> Unit) {
                 showAddDialog,
                 showDeleteDialog,
                 showBottomSheet,
+                onNavigateToInsights
             )
         }
 
@@ -87,6 +87,7 @@ fun TrackableItemList(
     showAddDialog: MutableState<Boolean>,
     showDeleteDialog: MutableState<Trackable?>,
     showBottomSheet: MutableState<Trackable?>,
+    onTrackableClicked: (String) -> Unit
 ) {
     val viewModel: MainViewModel = hiltViewModel()
     val context = LocalContext.current
@@ -109,13 +110,7 @@ fun TrackableItemList(
                     detectTapGestures(onLongPress = {
                         showDeleteDialog.value = trackable
                     }, onTap = {
-                        startActivity(
-                            context,
-                            InsightsActivity.getIntent(
-                                trackable.id,
-                                context
-                            ), null
-                        )
+                        onTrackableClicked(trackable.id)
                     })
                 }, onOptionsSelected = { showBottomSheet.value = trackable })
             }
