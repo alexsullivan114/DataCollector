@@ -2,7 +2,6 @@
 
 package com.alexsullivan.datacollor.home
 
-import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -45,24 +44,25 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat.startActivity
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.compose.rememberNavController
 import com.alexsullivan.datacollor.AddTrackableDialog
 import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.DeleteTrackableDialog
 import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.database.Trackable
-import com.alexsullivan.datacollor.previousdays.PreviousDaysActivity
 
 @Composable
-fun HomeScreen(onNavigateToSettings: () -> Unit, onNavigateToInsights: (String) -> Unit) {
+fun HomeScreen(
+    onNavigateToSettings: () -> Unit,
+    onNavigateToInsights: (String) -> Unit,
+    onNavigateToPreviousDays: () -> Unit
+) {
     val showAddDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf<Trackable?>(null) }
     val showBottomSheet = remember { mutableStateOf<Trackable?>(null) }
     AppTheme {
         Scaffold(
-            topBar = { QLAppBar(onNavigateToSettings) },
+            topBar = { QLAppBar(onNavigateToSettings, onNavigateToPreviousDays) },
             floatingActionButton = {
                 FloatingActionButton(onClick = { showAddDialog.value = true }) {
                     Icon(Icons.Filled.Add, "Add")
@@ -153,10 +153,9 @@ fun TrackableItemList(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QLAppBar(onNavigateToSettings: () -> Unit) {
+fun QLAppBar(onNavigateToSettings: () -> Unit, onNavigateToPreviousDays: () -> Unit) {
     var showOptionsDropdown by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val navController = rememberNavController()
     TopAppBar(
         title = { Text(stringResource(R.string.app_name)) },
         actions = {
@@ -176,13 +175,7 @@ fun QLAppBar(onNavigateToSettings: () -> Unit) {
                     text = { Text("Past Days") },
                     onClick = {
                         showOptionsDropdown = false
-                        startActivity(
-                            context,
-                            Intent(
-                                context,
-                                PreviousDaysActivity::class.java
-                            ), null
-                        )
+                        onNavigateToPreviousDays()
                     })
             }
         }

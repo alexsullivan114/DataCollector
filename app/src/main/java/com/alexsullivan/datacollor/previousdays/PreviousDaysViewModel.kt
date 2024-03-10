@@ -1,9 +1,11 @@
 package com.alexsullivan.datacollor.previousdays
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.TrackableManager
 import com.alexsullivan.datacollor.database.entities.TrackableEntity
+import com.alexsullivan.datacollor.utils.refreshWidget
 import com.alexsullivan.datacollor.utils.today
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -26,6 +28,7 @@ import javax.inject.Inject
 @HiltViewModel
 class PreviousDaysViewModel @Inject constructor(
     private val trackableManager: TrackableManager,
+    private val application: Application
 ): ViewModel() {
 
     private var date: LocalDate = today()
@@ -50,6 +53,11 @@ class PreviousDaysViewModel @Inject constructor(
 
     init {
         collectDisplayableEntitiesForDate()
+        viewModelScope.launch {
+            triggerUpdateWidgetFlow.collect {
+                refreshWidget(application)
+            }
+        }
     }
 
     private fun TrackableEntity.toDisplayableEntity(title: String): DisplayableTrackableEntity {

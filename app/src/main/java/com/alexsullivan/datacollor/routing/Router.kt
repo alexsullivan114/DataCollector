@@ -6,9 +6,11 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.alexsullivan.datacollor.home.HomeScreen
 import com.alexsullivan.datacollor.insights.InsightsScreen
+import com.alexsullivan.datacollor.previousdays.PreviousDaysScreen
 import com.alexsullivan.datacollor.routing.Screen.Home
 import com.alexsullivan.datacollor.routing.Screen.Insights
 import com.alexsullivan.datacollor.routing.Screen.Insights.navigate
+import com.alexsullivan.datacollor.routing.Screen.PreviousDays
 import com.alexsullivan.datacollor.routing.Screen.Settings
 import com.alexsullivan.datacollor.settings.SettingsScreen
 
@@ -19,7 +21,8 @@ fun Router() {
         composable(Home.screenName) {
             HomeScreen(
                 onNavigateToSettings = { navController.navigate(Settings) },
-                onNavigateToInsights = { trackableId -> navController.navigate(trackableId = trackableId) }
+                onNavigateToInsights = { trackableId -> navController.navigate(trackableId = trackableId) },
+                onNavigateToPreviousDays = { navController.navigate(PreviousDays) }
             )
         }
         composable(Settings.screenName) { SettingsScreen(onNavigateBack = { navController.popBackStack() }) }
@@ -27,5 +30,6 @@ fun Router() {
             Insights.screenName,
             arguments = Insights.navArguments
         ) { InsightsScreen(onNavigateBack = { navController.popBackStack() }) }
+        composable(PreviousDays.screenName) { PreviousDaysScreen() }
     }
 }

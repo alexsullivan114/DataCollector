@@ -25,6 +25,10 @@ sealed class Screen {
         override val navArguments = listOf(navArgument(trackableIdKey) { NavType.StringType })
         fun NavController.navigate(trackableId: String) = navigate("$screenNameRoot$trackableId")
     }
+
+    object PreviousDays: Screen() {
+        override val screenName = "previousdays"
+    }
 }
 
 internal fun NavController.navigate(screen: Screen) = navigate(screen.screenName)

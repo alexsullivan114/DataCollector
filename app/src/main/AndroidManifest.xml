@@ -29,7 +29,6 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
-        <activity android:name=".previousdays.PreviousDaysActivity" />
 
         <receiver android:name=".CollectorWidget" android:exported="false">
             <intent-filter>
