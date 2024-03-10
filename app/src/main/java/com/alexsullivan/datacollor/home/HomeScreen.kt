@@ -90,7 +90,6 @@ fun TrackableItemList(
     onTrackableClicked: (String) -> Unit
 ) {
     val viewModel: MainViewModel = hiltViewModel()
-    val context = LocalContext.current
     val trackables by viewModel.itemsFlow.collectAsState()
     LazyColumn(
         modifier = modifier.fillMaxWidth(),

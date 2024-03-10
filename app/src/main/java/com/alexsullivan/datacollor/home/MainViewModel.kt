@@ -39,8 +39,13 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             trackableManager.getTrackablesFlow()
                 .distinctUntilChanged()
+                .collect(_itemsFlow::emit)
+        }
+
+        viewModelScope.launch {
+            trackableManager.getTrackablesFlow()
+                .distinctUntilChanged()
                 .collect {
-                    _itemsFlow.emit(it)
                     _triggerUpdateWidgetsFlow.send(Unit)
                 }
         }
