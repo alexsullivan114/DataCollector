@@ -15,7 +15,7 @@
         android:name=".DataCollectorApplication"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".home.MainActivity"
+            android:name=".application.MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -29,9 +29,6 @@
                 <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
-        <activity android:name=".settings.SettingsActivity" />
-        <activity android:name=".previousdays.PreviousDaysActivity" />
-        <activity android:name=".insights.InsightsActivity" />
 
         <receiver android:name=".CollectorWidget" android:exported="false">
             <intent-filter>

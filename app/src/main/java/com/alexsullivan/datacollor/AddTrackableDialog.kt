@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor.home
+package com.alexsullivan.datacollor
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -35,7 +35,12 @@ fun AddTrackableDialog(onDismiss: () -> Unit, onDone: (Trackable) -> Unit) {
     Dialog(onDismissRequest = onDismiss) {
         Card(modifier = Modifier.fillMaxWidth()) {
             Column {
-                Text(modifier = Modifier.padding(16.dp), text = "Add item to track", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(
+                    modifier = Modifier.padding(16.dp),
+                    text = "Add item to track",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center
@@ -52,10 +57,16 @@ fun AddTrackableDialog(onDismiss: () -> Unit, onDone: (Trackable) -> Unit) {
                 )
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = {
-                        val trackable = Trackable(UUID.randomUUID().toString(), text, true, selectedType)
+                        onDismiss()
+                    }) {
+                        Text("Cancel")
+                    }
+                    TextButton(onClick = {
+                        val trackable =
+                            Trackable(UUID.randomUUID().toString(), text, true, selectedType)
                         onDone(trackable)
                     }, enabled = text.isNotEmpty()) {
-                        Text("Ok")
+                        Text("Add")
                     }
                 }
             }
@@ -83,7 +94,12 @@ private fun TrackableTypeOptions(
                 RadioButton(
                     selected = selectedType == trackableType,
                     onClick = { onTypeSelected(trackableType) })
-                Text(typeTitle, modifier = Modifier.padding(start = 8.dp), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                Text(
+                    typeTitle,
+                    modifier = Modifier.padding(start = 8.dp),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onPrimaryContainer
+                )
             }
         }
     }

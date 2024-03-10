@@ -1,11 +1,13 @@
 package com.alexsullivan.datacollor.utils
 
-import android.app.Activity
+import android.content.Context
 import android.content.Intent
+import android.util.Log
 import androidx.core.content.FileProvider
 import com.alexsullivan.datacollor.BuildConfig
 import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
 import com.alexsullivan.datacollor.serialization.TrackableSerializer
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -13,7 +15,7 @@ import java.io.FileWriter
 import javax.inject.Inject
 
 class ExportUtil @Inject constructor(
-    private val activity: Activity,
+    private @ApplicationContext val context: Context,
     private val getLifetimeData: GetLifetimeDataUseCase
 ) {
 
@@ -21,7 +23,7 @@ class ExportUtil @Inject constructor(
         withContext(Dispatchers.IO) {
             val csvText = TrackableSerializer.serialize(getLifetimeData())
 
-            val dir = File(activity.filesDir, "csvs")
+            val dir = File(context.filesDir, "csvs")
             if (!dir.exists()) {
                 dir.mkdir()
             }
@@ -35,21 +37,22 @@ class ExportUtil @Inject constructor(
                 writer.flush()
                 writer.close()
             } catch (e: Exception) {
-
+                Log.e("ExportUtil", "Failed to write export file", e)
             }
 
             if (file != null) {
                 val uri = FileProvider.getUriForFile(
-                    activity,
+                    context,
                     BuildConfig.APPLICATION_ID + ".provider",
                     file
                 )
                 val sharingIntent = Intent(Intent.ACTION_SEND)
                 sharingIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                sharingIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 sharingIntent.action = Intent.ACTION_SEND
                 sharingIntent.type = "text/csv"
                 sharingIntent.putExtra(Intent.EXTRA_STREAM, uri)
-                activity.startActivity(sharingIntent)
+                context.startActivity(sharingIntent)
             }
         }
     }

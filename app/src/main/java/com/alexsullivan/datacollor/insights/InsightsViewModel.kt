@@ -1,7 +1,7 @@
 package com.alexsullivan.datacollor.insights
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.database.GetBooleanEntitiesUseCase
 import com.alexsullivan.datacollor.database.GetNumberEntitiesUseCase
@@ -18,9 +18,8 @@ import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.NumericUiS
 import com.alexsullivan.datacollor.insights.InsightsViewModel.UiState.RatingUiState
 import com.alexsullivan.datacollor.insights.ratings.MonthRating
 import com.alexsullivan.datacollor.insights.ratings.MonthRatingGridDay
-import dagger.assisted.Assisted
-import dagger.assisted.AssistedFactory
-import dagger.assisted.AssistedInject
+import com.alexsullivan.datacollor.routing.Screen
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
@@ -32,35 +31,38 @@ import java.time.OffsetDateTime
 import java.time.Year
 import java.time.temporal.ChronoUnit
 import java.util.Locale
+import javax.inject.Inject
 import kotlin.math.ceil
 import kotlin.math.floor
 
-class InsightsViewModel @AssistedInject constructor(
-    @Assisted private val trackableId: String,
+@HiltViewModel
+class InsightsViewModel @Inject constructor(
     private val getTrackable: GetTrackableUsCase,
     private val getRatingEntities: GetRatingEntitiesUseCase,
     private val getNumberEntities: GetNumberEntitiesUseCase,
     private val getBooleanEntities: GetBooleanEntitiesUseCase,
     private val getTimeEntities: GetTimeEntitiesUseCase,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val _uiFlow = MutableStateFlow<UiState?>(null)
     val uiFlow = _uiFlow.asStateFlow()
 
     init {
+        val trackableId = savedStateHandle.get<String>(Screen.Insights.trackableIdKey)!!
         viewModelScope.launch {
             val trackable = getTrackable(trackableId)
                 ?: throw IllegalStateException("Can't find trackable with id $trackableId")
             val state = when (trackable.type) {
-                TrackableType.BOOLEAN -> getBooleanUiState(trackable)
-                TrackableType.NUMBER -> getNumericUiState(trackable)
-                TrackableType.RATING -> getRatingUiState(trackable)
+                TrackableType.BOOLEAN -> getBooleanUiState(trackable, trackableId)
+                TrackableType.NUMBER -> getNumericUiState(trackable, trackableId)
+                TrackableType.RATING -> getRatingUiState(trackable, trackableId)
                 TrackableType.TIME -> getTimeUiState(trackable)
             }
             _uiFlow.emit(state)
         }
     }
 
-    private suspend fun getRatingUiState(trackable: Trackable): RatingUiState {
+    private suspend fun getRatingUiState(trackable: Trackable, trackableId: String): RatingUiState {
         val entities = getRatingEntities(trackableId).sortedBy { it.date }
         val datePairs = entities.map { it.date to it.rating }
         val dayAverages = entities.groupBy { it.date.dayOfWeek }.mapValues { (dayOfWeek, entities) ->
@@ -112,7 +114,7 @@ class InsightsViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun getNumericUiState(trackable: Trackable): NumericUiState {
+    private suspend fun getNumericUiState(trackable: Trackable, trackableId: String): NumericUiState {
         val entities = getNumberEntities(trackableId).sortedBy { it.date }
         val datePairs = entities.map { it.date to it.count }
         val totalCount = entities.sumOf { it.count }
@@ -143,7 +145,7 @@ class InsightsViewModel @AssistedInject constructor(
         }
     }
 
-    private suspend fun getBooleanUiState(trackable: Trackable): BooleanUiState {
+    private suspend fun getBooleanUiState(trackable: Trackable, trackableId: String): BooleanUiState {
         val entities = getBooleanEntities(trackableId).sortedBy { it.date }
 
         val totalCount = getTotalCount(entities)
@@ -223,23 +225,4 @@ class InsightsViewModel @AssistedInject constructor(
             val averageToggledTime: LocalTime
         ) : UiState()
     }
-
-
-
-    companion object {
-        fun provideFactory(
-            assistedFactory: InsightsViewModelFactory,
-            trackableId: String
-        ): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return assistedFactory.create(trackableId) as T
-            }
-        }
-    }
-}
-
-@AssistedFactory
-interface InsightsViewModelFactory {
-    fun create(trackableId: String): InsightsViewModel
 }
