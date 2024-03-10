@@ -89,7 +89,7 @@ fun TrackableItemList(
     showBottomSheet: MutableState<Trackable?>,
     onTrackableClicked: (String) -> Unit
 ) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: HomeViewModel = hiltViewModel()
     val trackables by viewModel.itemsFlow.collectAsState()
     LazyColumn(
         modifier = modifier.fillMaxWidth(),
@@ -206,7 +206,7 @@ fun TrackableItem(
 
 @Composable
 fun ExportButton(modifier: Modifier = Modifier) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: HomeViewModel = hiltViewModel()
     Button(modifier = modifier
         .padding(16.dp)
         .fillMaxWidth(), onClick = viewModel::export
@@ -217,7 +217,7 @@ fun ExportButton(modifier: Modifier = Modifier) {
 
 @Composable
 fun OptionsBottomSheet(trackable: Trackable, onDismiss: () -> Unit, onDelete: () -> Unit) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: HomeViewModel = hiltViewModel()
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp)) {
             Row(

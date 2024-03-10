@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor.home
+package com.alexsullivan.datacollor.application
 
 import android.Manifest
 import android.os.Bundle
