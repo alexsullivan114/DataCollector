@@ -29,6 +29,11 @@ sealed class Screen {
     object PreviousDays: Screen() {
         override val screenName = "previousdays"
     }
+
+    object Analysis: Screen() {
+        override val screenName = "analysis"
+
+    }
 }
 
 internal fun NavController.navigate(screen: Screen) = navigate(screen.screenName)
