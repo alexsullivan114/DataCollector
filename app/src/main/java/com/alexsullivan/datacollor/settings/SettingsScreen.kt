@@ -24,33 +24,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onNavigateBack: () -> Unit) {
-    AppTheme {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Settings") },
-                    navigationIcon = {
-                        IconButton(onClick = onNavigateBack) {
-                            Icon(
-                                Icons.Filled.ArrowBack,
-                                "Back"
-                            )
-                        }
-                    })
-            }
-        ) {
-            LazyColumn(modifier = Modifier
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Settings") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            Icons.Filled.ArrowBack,
+                            "Back"
+                        )
+                    }
+                })
+        }
+    ) {
+        LazyColumn(
+            modifier = Modifier
                 .padding(it)
-                .padding(16.dp)) {
-                item {
-                    BackupToDriveSetting()
-                }
+                .padding(16.dp)
+        ) {
+            item {
+                BackupToDriveSetting()
             }
         }
     }

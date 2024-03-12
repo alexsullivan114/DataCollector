@@ -4,6 +4,7 @@ import android.Manifest
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.drive.DriveUploadWorker
 import com.alexsullivan.datacollor.routing.Router
 import com.alexsullivan.datacollor.utils.refreshWidget
@@ -54,8 +56,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        enableEdgeToEdge()
+
         setContent {
-            Router()
+            AppTheme {
+                Router()
+            }
         }
 
         lifecycleScope.launch {

@@ -38,7 +38,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -46,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.alexsullivan.datacollor.AddTrackableDialog
-import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.DeleteTrackableDialog
 import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.database.Trackable
@@ -60,24 +58,21 @@ fun HomeScreen(
     val showAddDialog = remember { mutableStateOf(false) }
     val showDeleteDialog = remember { mutableStateOf<Trackable?>(null) }
     val showBottomSheet = remember { mutableStateOf<Trackable?>(null) }
-    AppTheme {
-        Scaffold(
-            topBar = { QLAppBar(onNavigateToSettings, onNavigateToPreviousDays) },
-            floatingActionButton = {
-                FloatingActionButton(onClick = { showAddDialog.value = true }) {
-                    Icon(Icons.Filled.Add, "Add")
-                }
+    Scaffold(
+        topBar = { QLAppBar(onNavigateToSettings, onNavigateToPreviousDays) },
+        floatingActionButton = {
+            FloatingActionButton(onClick = { showAddDialog.value = true }) {
+                Icon(Icons.Filled.Add, "Add")
             }
-        ) {
-            TrackableItemList(
-                modifier = Modifier.padding(it),
-                showAddDialog,
-                showDeleteDialog,
-                showBottomSheet,
-                onNavigateToInsights
-            )
         }
-
+    ) {
+        TrackableItemList(
+            modifier = Modifier.padding(it),
+            showAddDialog,
+            showDeleteDialog,
+            showBottomSheet,
+            onNavigateToInsights
+        )
     }
 }
 
@@ -154,7 +149,6 @@ fun TrackableItemList(
 @Composable
 fun QLAppBar(onNavigateToSettings: () -> Unit, onNavigateToPreviousDays: () -> Unit) {
     var showOptionsDropdown by remember { mutableStateOf(false) }
-    val context = LocalContext.current
     TopAppBar(
         title = { Text(stringResource(R.string.app_name)) },
         actions = {
