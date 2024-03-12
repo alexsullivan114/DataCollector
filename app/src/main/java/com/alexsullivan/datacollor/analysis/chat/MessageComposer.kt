@@ -39,9 +39,9 @@ import com.alexsullivan.datacollor.R
 
 @Preview
 @Composable
-fun MessageComposer() {
+fun MessageComposer(modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(
                 MaterialTheme.colorScheme.primaryContainer,
