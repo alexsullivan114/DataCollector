@@ -21,6 +21,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "OPENAI_KEY", "\"${project.property('OPENAI_KEY')}\""
+        }
+        debug {
+            buildConfigField "String", "OPENAI_KEY", "\"${project.property('OPENAI_KEY')}\""
         }
     }
     packagingOptions {

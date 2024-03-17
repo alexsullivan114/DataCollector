@@ -21,20 +21,23 @@ import androidx.compose.ui.unit.dp
 
 sealed class ChatGroupItem() {
     abstract val sender: Sender
+    abstract val id: String
     data class Group(
         val top: ChatItem,
         val bottom: ChatItem,
         val middleItems: List<ChatItem> = emptyList(),
-        override val sender: Sender
+        override val sender: Sender,
+        override val id: String
     ) : ChatGroupItem()
 
-    data class Single(val item: ChatItem, override val sender: Sender) : ChatGroupItem()
+    data class Single(val item: ChatItem, override val sender: Sender, override val id: String) :
+        ChatGroupItem()
 }
 
 @Preview
 @Composable
 fun SingleChatGroupPreview() {
-    ChatGroup(ChatGroupItem.Single(ChatItem("id1", "Test Single Text"), Sender.SYSTEM))
+    ChatGroup(ChatGroupItem.Single(ChatItem("id1", "Test Single Text"), Sender.SYSTEM, ""))
 }
 
 @Preview
@@ -45,7 +48,8 @@ fun GroupChatGroupPreview() {
             top = ChatItem("id1", "Test Top Text"),
             bottom = ChatItem("id2", "Test Bottom Text"),
             middleItems = listOf(ChatItem("id3", "Test Middle Text")),
-            sender = Sender.USER
+            sender = Sender.USER,
+            id = ""
         )
     )
 }

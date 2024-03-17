@@ -1,5 +1,6 @@
 package com.alexsullivan.datacollor.chat.networking
 
+import com.alexsullivan.datacollor.BuildConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -8,6 +9,7 @@ import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
+import java.util.concurrent.TimeUnit
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -17,11 +19,14 @@ object OpenAIModule {
         val logging = HttpLoggingInterceptor()
         logging.setLevel(HttpLoggingInterceptor.Level.BASIC)
         val client = OkHttpClient.Builder()
+            .connectTimeout(180, TimeUnit.SECONDS)
+            .writeTimeout(180, TimeUnit.SECONDS)
+            .readTimeout(180, TimeUnit.SECONDS)
             .addInterceptor(logging)
             .addInterceptor {  chain ->
                 val updatedHeaders = chain.request().headers.newBuilder()
                         // TODO: Move API keys out of here into gradle file
-                    .add("Authorization", "Bearer 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")
+                    .add("Authorization", "Bearer ${BuildConfig.OPENAI_KEY}")
                     .add("OpenAI-Beta", "assistants=v1")
                     .add("Content-Type", "application/json").build()
                 chain.proceed(chain.request().newBuilder().headers(updatedHeaders).build())

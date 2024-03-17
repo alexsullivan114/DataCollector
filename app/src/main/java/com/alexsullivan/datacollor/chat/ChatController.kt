@@ -1,23 +1,30 @@
 package com.alexsullivan.datacollor.chat
 
+import android.util.Log
 import com.alexsullivan.datacollor.QLPreferences
 import com.alexsullivan.datacollor.chat.networking.OpenAIService
 import com.alexsullivan.datacollor.chat.networking.models.AssistantTool
 import com.alexsullivan.datacollor.chat.networking.models.CreateAssistant
 import com.alexsullivan.datacollor.chat.networking.models.CreateAssistantResponse
 import com.alexsullivan.datacollor.chat.networking.models.CreateMessage
-import com.alexsullivan.datacollor.chat.networking.models.Message
 import com.alexsullivan.datacollor.chat.networking.models.CreateRun
-import com.alexsullivan.datacollor.chat.networking.models.Run
-import com.alexsullivan.datacollor.chat.networking.models.FileUpload
+import com.alexsullivan.datacollor.chat.networking.models.DeleteFileResponse
 import com.alexsullivan.datacollor.chat.networking.models.File
+import com.alexsullivan.datacollor.chat.networking.models.FileUpload
+import com.alexsullivan.datacollor.chat.networking.models.Message
+import com.alexsullivan.datacollor.chat.networking.models.Run
+import com.alexsullivan.datacollor.chat.networking.models.RunStatus
 import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
 import com.alexsullivan.datacollor.serialization.TrackableSerializer
-import com.alexsullivan.datacollor.utils.sFlatMap
+import com.alexsullivan.datacollor.utils.flatMap
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import retrofit2.Response
 import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 class ChatController @Inject constructor(
     private val openAIService: OpenAIService,
@@ -32,14 +39,14 @@ class ChatController @Inject constructor(
 
     suspend fun initialize(): Result<*> {
         val deleteOldFileResult =
-            prefs.openAiCsvFileId?.let { openAIService.deleteFile(it).toResult() }
+            prefs.openAiCsvFileId?.let { openAIService.deleteFile(it).toDeleteFileResponseResult() }
                 ?: Result.success(Unit)
-        val uploadFileResult = deleteOldFileResult.sFlatMap {
+        val uploadFileResult = deleteOldFileResult.flatMap {
             uploadLatestCsv().onSuccess {
                 prefs.openAiCsvFileId = it.id
             }
         }
-        val createOrUpdateAssistantResult = uploadFileResult.sFlatMap {
+        val createOrUpdateAssistantResult = uploadFileResult.flatMap {
             val existingAssistantId = prefs.openAiAssistantId
             if (existingAssistantId != null) {
                swapOutAssistantsFile(existingAssistantId, it.id)
@@ -50,7 +57,7 @@ class ChatController @Inject constructor(
             }
         }
 
-        return createOrUpdateAssistantResult.sFlatMap { openAIService.createThread().toResult() }
+        return createOrUpdateAssistantResult.flatMap { openAIService.createThread().toResult() }
             .onSuccess {
                 threadId = it.id
             }
@@ -60,17 +67,56 @@ class ChatController @Inject constructor(
         val threadId = threadId
         val assistantId = prefs.openAiAssistantId
         return if (threadId != null && assistantId != null) {
+            Log.d("DEBUGGG", "Sending message $message")
             val createMessageResult =
                 createMessage(threadId, message).onSuccess { createMessageResponse ->
                     val existingMessages = _messages.value
-                    val newMessageList = existingMessages + createMessageResponse
+                    val newMessageList = listOf(createMessageResponse) + existingMessages
+                    Log.d("DEBUGGG", "Sent message. Emitting new message")
                     _messages.emit(newMessageList)
                 }
-            createMessageResult.sFlatMap {
+            createMessageResult.flatMap {
+                Log.d("DEBUGGG", "Creating run")
                 createRun(threadId, assistantId)
+            }.onSuccess {
+                GlobalScope.launch {
+                    pollAndGetLatestMessages(it)
+                }
             }
         } else {
             Result.failure<Run>(java.lang.IllegalStateException("No thread id or assistant id"))
+        }
+    }
+
+    private suspend fun pollAndGetLatestMessages(run: Run) {
+        pollRun(run).flatMap { openAIService.getMessages(run.thread_id).toResult() }
+            .onSuccess { messageResponse ->
+                _messages.emit(messageResponse.data)
+            }
+            .onFailure {
+                Log.d("DEBUGGG", "Failed to get messages with error $it")
+            }
+    }
+
+    private suspend fun pollRun(run: Run): Result<*> {
+        var failCount = 0
+        var status = RunStatus.from(run.status)
+        while (status == RunStatus.QUEUED) {
+            delay(2.seconds)
+            val updatedRunResult =
+                openAIService.getRun(run.thread_id, run.id).toResult()
+            if (updatedRunResult.isFailure) {
+                failCount++
+                if (failCount > 5) {
+                    return Result.failure<Unit>(IllegalStateException("Failed to get updated run status"))
+                }
+            }
+            status = RunStatus.from(updatedRunResult.getOrThrow().status)
+        }
+        return if (status == RunStatus.COMPLETED) {
+            Result.success(Unit)
+        } else {
+            Result.failure<Unit>(IllegalStateException("Run did not complete successfully"))
         }
     }
 
@@ -127,6 +173,16 @@ class ChatController @Inject constructor(
             Result.success(body)
         } else {
             Result.failure(IllegalStateException(errorBody()?.string()))
+        }
+    }
+
+    private fun Response<DeleteFileResponse>.toDeleteFileResponseResult(): Result<*> {
+        // This can fail if we already deleted the file (like say we crashed after the delete file stage).
+        // If it's a 404 we should tread that as a success.
+        return if (raw().code == 404) {
+            Result.success(Unit)
+        } else {
+            this.toResult()
         }
     }
 

@@ -23,10 +23,9 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -48,12 +47,13 @@ fun MessageComposer(modifier: Modifier = Modifier, onSendClick: (String) -> Unit
             ),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(16.dp)) {
-            TextInput(modifier = Modifier.weight(1.0f))
+            val text = remember { mutableStateOf("") }
+            TextInput(modifier = Modifier.weight(1.0f), text)
             Icon(
                 Icons.AutoMirrored.Filled.Send,
                 stringResource(id = R.string.send_message),
                 modifier = Modifier.padding(start = 16.dp).clickable {
-                    onSendClick("")
+                    onSendClick(text.value)
                 }
             )
         }
@@ -61,9 +61,8 @@ fun MessageComposer(modifier: Modifier = Modifier, onSendClick: (String) -> Unit
 }
 
 @Composable
-private fun TextInput(modifier: Modifier) {
+private fun TextInput(modifier: Modifier, textState: MutableState<String>) {
     val rainbowColors = listOf(Color.Red, Color.Blue, Color.Magenta)
-    var text by remember { mutableStateOf("") }
     val interactionSource = remember { MutableInteractionSource() }
     val brush = remember {
         Brush.linearGradient(
@@ -72,13 +71,13 @@ private fun TextInput(modifier: Modifier) {
     }
     BasicTextField(
         modifier = modifier,
-        value = text,
-        onValueChange = { text = it },
+        value = textState.value,
+        onValueChange = { textState.value = it },
         textStyle = TextStyle(brush = brush),
         interactionSource = interactionSource,
         decorationBox = {
             TextFieldDefaults.TextFieldDecorationBox(
-                value = text,
+                value = textState.value,
                 innerTextField = it,
                 enabled = true,
                 interactionSource = interactionSource,
