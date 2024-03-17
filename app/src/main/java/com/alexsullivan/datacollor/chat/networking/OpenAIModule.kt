@@ -25,7 +25,6 @@ object OpenAIModule {
             .addInterceptor(logging)
             .addInterceptor {  chain ->
                 val updatedHeaders = chain.request().headers.newBuilder()
-                        // TODO: Move API keys out of here into gradle file
                     .add("Authorization", "Bearer ${BuildConfig.OPENAI_KEY}")
                     .add("OpenAI-Beta", "assistants=v1")
                     .add("Content-Type", "application/json").build()

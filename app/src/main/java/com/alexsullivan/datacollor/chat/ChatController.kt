@@ -101,7 +101,7 @@ class ChatController @Inject constructor(
     private suspend fun pollRun(run: Run): Result<*> {
         var failCount = 0
         var status = RunStatus.from(run.status)
-        while (status == RunStatus.QUEUED) {
+        while (status == RunStatus.QUEUED || status == RunStatus.IN_PROGRESS) {
             delay(2.seconds)
             val updatedRunResult =
                 openAIService.getRun(run.thread_id, run.id).toResult()
@@ -112,6 +112,7 @@ class ChatController @Inject constructor(
                 }
             }
             status = RunStatus.from(updatedRunResult.getOrThrow().status)
+            Log.d("DEBUGGG", "New status: $status")
         }
         return if (status == RunStatus.COMPLETED) {
             Result.success(Unit)

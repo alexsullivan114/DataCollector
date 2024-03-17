@@ -2,6 +2,7 @@ package com.alexsullivan.datacollor.chat.networking.models
 
 enum class RunStatus {
     QUEUED,
+    IN_PROGRESS,
     FAILED,
     COMPLETED,
     UNKNOWN;
@@ -12,6 +13,7 @@ enum class RunStatus {
                 "queued" -> QUEUED
                 "failed" -> FAILED
                 "completed" -> COMPLETED
+                "in_progress" -> IN_PROGRESS
                 else -> UNKNOWN
             }
         }
