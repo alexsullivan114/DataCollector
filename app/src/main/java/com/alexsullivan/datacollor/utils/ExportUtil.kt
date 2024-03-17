@@ -15,7 +15,7 @@ import java.io.FileWriter
 import javax.inject.Inject
 
 class ExportUtil @Inject constructor(
-    private @ApplicationContext val context: Context,
+    @ApplicationContext private val context: Context,
     private val getLifetimeData: GetLifetimeDataUseCase
 ) {
 

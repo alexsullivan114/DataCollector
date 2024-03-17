@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor.analysis.chat
+package com.alexsullivan.datacollor.chat.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,7 +34,7 @@ sealed class ChatGroupItem() {
 @Preview
 @Composable
 fun SingleChatGroupPreview() {
-    ChatGroup(ChatGroupItem.Single(ChatItem("Test Single Text"), Sender.SYSTEM))
+    ChatGroup(ChatGroupItem.Single(ChatItem("id1", "Test Single Text"), Sender.SYSTEM))
 }
 
 @Preview
@@ -42,9 +42,9 @@ fun SingleChatGroupPreview() {
 fun GroupChatGroupPreview() {
     ChatGroup(
         ChatGroupItem.Group(
-            top = ChatItem("Test Top Text"),
-            bottom = ChatItem("Test Bottom Text"),
-            middleItems = listOf(ChatItem("Test Middle Text")),
+            top = ChatItem("id1", "Test Top Text"),
+            bottom = ChatItem("id2", "Test Bottom Text"),
+            middleItems = listOf(ChatItem("id3", "Test Middle Text")),
             sender = Sender.USER
         )
     )

@@ -20,7 +20,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.alexsullivan.datacollor.R
-import com.alexsullivan.datacollor.analysis.AnalysisScreen
+import com.alexsullivan.datacollor.chat.ui.ChatScreen
 import com.alexsullivan.datacollor.home.HomeScreen
 import com.alexsullivan.datacollor.insights.InsightsScreen
 import com.alexsullivan.datacollor.previousdays.PreviousDaysScreen
@@ -103,7 +103,7 @@ fun Router() {
                 arguments = Insights.navArguments
             ) { InsightsScreen(onNavigateBack = { navController.popBackStack() }) }
             composable(PreviousDays.screenName) { PreviousDaysScreen() }
-            composable(Analysis.screenName) { AnalysisScreen() }
+            composable(Analysis.screenName) { ChatScreen() }
         }
     }
 }

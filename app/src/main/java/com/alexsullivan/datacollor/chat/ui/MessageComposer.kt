@@ -2,9 +2,10 @@
     ExperimentalMaterialApi::class
 )
 
-package com.alexsullivan.datacollor.analysis.chat
+package com.alexsullivan.datacollor.chat.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -33,13 +34,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.alexsullivan.datacollor.R
 
-@Preview
 @Composable
-fun MessageComposer(modifier: Modifier = Modifier) {
+fun MessageComposer(modifier: Modifier = Modifier, onSendClick: (String) -> Unit) {
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -53,7 +52,9 @@ fun MessageComposer(modifier: Modifier = Modifier) {
             Icon(
                 Icons.AutoMirrored.Filled.Send,
                 stringResource(id = R.string.send_message),
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier.padding(start = 16.dp).clickable {
+                    onSendClick("")
+                }
             )
         }
     }

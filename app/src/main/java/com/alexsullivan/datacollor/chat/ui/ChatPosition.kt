@@ -1,4 +1,4 @@
-package com.alexsullivan.datacollor.analysis.chat
+package com.alexsullivan.datacollor.chat.ui
 
 enum class ChatPosition {
     TOP,
