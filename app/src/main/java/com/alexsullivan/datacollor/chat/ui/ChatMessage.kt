@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -56,7 +57,10 @@ fun GroupChatGroupPreview() {
 
 @Composable
 fun ChatGroup(groupItem: ChatGroupItem, modifier: Modifier = Modifier) {
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = groupItem.sender.horizontalArrangement()) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(groupItem.sender.padding()),
+        horizontalArrangement = groupItem.sender.horizontalArrangement()
+    ) {
         when (groupItem) {
             is ChatGroupItem.Group -> GroupChatItem(groupItem = groupItem, modifier)
             is ChatGroupItem.Single -> SingleChatItem(single = groupItem, modifier)
@@ -95,6 +99,13 @@ fun ChatMessage(chatItem: ChatItem, chatPosition: ChatPosition, modifier: Modifi
         )
     ) {
         Text(chatItem.text, modifier = Modifier.padding(8.dp))
+    }
+}
+
+private fun Sender.padding(): PaddingValues {
+    return when (this) {
+        Sender.USER -> PaddingValues(start = 16.dp)
+        Sender.SYSTEM -> PaddingValues(end = 16.dp)
     }
 }
 

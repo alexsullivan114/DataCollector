@@ -54,6 +54,7 @@ fun MessageComposer(modifier: Modifier = Modifier, onSendClick: (String) -> Unit
                 stringResource(id = R.string.send_message),
                 modifier = Modifier.padding(start = 16.dp).clickable {
                     onSendClick(text.value)
+                    text.value = ""
                 }
             )
         }
