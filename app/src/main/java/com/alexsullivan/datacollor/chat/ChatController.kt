@@ -30,7 +30,8 @@ import kotlin.time.Duration.Companion.seconds
 class ChatController @Inject constructor(
     private val openAIService: OpenAIService,
     private val getLifetimeData: GetLifetimeDataUseCase,
-    private val prefs: QLPreferences
+    private val prefs: QLPreferences,
+    private val imageCache: AIImageCache
 ) {
 
     private var threadId: String? = null
@@ -196,7 +197,10 @@ class ChatController @Inject constructor(
                 PopulatedMessageContent.TextContent(messageContent.text!!.value)
             } else {
                 val fileId = messageContent.image_file!!.file_id
-                val imageBytes = openAIService.getFileContent(fileId).body()!!.bytes()
+                val imageBytes =
+                    imageCache.getImage(fileId) ?: openAIService.getFileContent(fileId).body()!!
+                        .bytes()
+                imageCache.putImage(fileId, imageBytes)
                 PopulatedMessageContent.FileContent(imageBytes)
             }
             val populatedMessage = PopulatedMessage(
