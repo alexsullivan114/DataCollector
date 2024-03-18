@@ -12,6 +12,7 @@ import com.alexsullivan.datacollor.chat.networking.models.DeleteFileResponse
 import com.alexsullivan.datacollor.chat.networking.models.File
 import com.alexsullivan.datacollor.chat.networking.models.FileUpload
 import com.alexsullivan.datacollor.chat.networking.models.Message
+import com.alexsullivan.datacollor.chat.networking.models.MessageResponse
 import com.alexsullivan.datacollor.chat.networking.models.Run
 import com.alexsullivan.datacollor.chat.networking.models.RunStatus
 import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
@@ -34,7 +35,7 @@ class ChatController @Inject constructor(
 
     private var threadId: String? = null
 
-    private val _messages = MutableStateFlow<List<Message>>(emptyList())
+    private val _messages = MutableStateFlow<List<PopulatedMessage>>(emptyList())
     val messages = _messages.asStateFlow()
 
     suspend fun initialize(): Result<*> {
@@ -71,7 +72,8 @@ class ChatController @Inject constructor(
             val createMessageResult =
                 createMessage(threadId, message).onSuccess { createMessageResponse ->
                     val existingMessages = _messages.value
-                    val newMessageList = listOf(createMessageResponse) + existingMessages
+                    val newMessageList =
+                        createMessageResponse.toPopulatedMessages() + existingMessages
                     Log.d("DEBUGGG", "Sent message. Emitting new message")
                     _messages.emit(newMessageList)
                 }
@@ -91,7 +93,7 @@ class ChatController @Inject constructor(
     private suspend fun pollAndGetLatestMessages(run: Run) {
         pollRun(run).flatMap { openAIService.getMessages(run.thread_id).toResult() }
             .onSuccess { messageResponse ->
-                _messages.emit(messageResponse.data)
+                _messages.emit(messageResponse.toPopulatedMessages())
             }
             .onFailure {
                 Log.d("DEBUGGG", "Failed to get messages with error $it")
@@ -185,6 +187,31 @@ class ChatController @Inject constructor(
         } else {
             this.toResult()
         }
+    }
+
+    private suspend fun Message.toPopulatedMessages(): List<PopulatedMessage> {
+        val returnList = mutableListOf<PopulatedMessage>()
+        content.forEachIndexed { index, messageContent ->
+            val populatedMessageContent = if (messageContent.type == "text") {
+                PopulatedMessageContent.TextContent(messageContent.text!!.value)
+            } else {
+                val fileId = messageContent.image_file!!.file_id
+                val imageBytes = openAIService.getFileContent(fileId).body()!!.bytes()
+                PopulatedMessageContent.FileContent(imageBytes)
+            }
+            val populatedMessage = PopulatedMessage(
+                id = id + index,
+                role = role,
+                createdAt = created_at,
+                content = populatedMessageContent
+            )
+            returnList.add(populatedMessage)
+        }
+        return returnList
+    }
+
+    private suspend fun MessageResponse.toPopulatedMessages(): List<PopulatedMessage> {
+        return data.flatMap { it.toPopulatedMessages() }
     }
 
     companion object {

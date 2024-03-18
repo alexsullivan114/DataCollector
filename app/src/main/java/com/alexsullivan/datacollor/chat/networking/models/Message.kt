@@ -8,6 +8,12 @@ data class Message(
     val created_at: Long,
 )
 
-data class MessageContent(val type: String, val text: MessageContentText)
+data class MessageContent(
+    val type: String,
+    val text: MessageContentText?,
+    val image_file: MessageContentFile?
+)
 
 data class MessageContentText(val value: String)
+
+data class MessageContentFile(val file_id: String)
