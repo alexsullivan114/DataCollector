@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.tooling.preview.Preview
@@ -58,7 +59,9 @@ fun GroupChatGroupPreview() {
 @Composable
 fun ChatGroup(groupItem: ChatGroupItem, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(groupItem.sender.padding()),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(groupItem.sender.padding()),
         horizontalArrangement = groupItem.sender.horizontalArrangement()
     ) {
         when (groupItem) {
@@ -70,35 +73,57 @@ fun ChatGroup(groupItem: ChatGroupItem, modifier: Modifier = Modifier) {
 
 @Composable
 fun GroupChatItem(groupItem: ChatGroupItem.Group, modifier: Modifier = Modifier) {
+    val backgroundColor = groupItem.sender.backgroundColor()
     Column(modifier = modifier.width(IntrinsicSize.Max)) {
-        ChatMessage(groupItem.top, ChatPosition.TOP,
+        ChatMessage(
+            groupItem.top, ChatPosition.TOP,
             Modifier
                 .padding(bottom = 2.dp)
-                .fillMaxWidth())
+                .fillMaxWidth()
+                .background(backgroundColor, ChatPosition.TOP.shape())
+        )
         for (middleItem in groupItem.middleItems) {
-            ChatMessage(middleItem, ChatPosition.MIDDLE,
+            ChatMessage(
+                middleItem, ChatPosition.MIDDLE,
                 Modifier
                     .padding(bottom = 2.dp)
-                    .fillMaxWidth())
+                    .fillMaxWidth()
+                    .background(backgroundColor, ChatPosition.MIDDLE.shape())
+            )
         }
-        ChatMessage(groupItem.bottom, ChatPosition.BOTTOM, modifier = Modifier.fillMaxWidth())
+        ChatMessage(
+            groupItem.bottom,
+            ChatPosition.BOTTOM,
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(backgroundColor, ChatPosition.BOTTOM.shape())
+        )
     }
 }
 
 @Composable
 fun SingleChatItem(single: ChatGroupItem.Single, modifier: Modifier) {
-    ChatMessage(single.item, ChatPosition.SOLO, modifier)
+    ChatMessage(
+        single.item,
+        ChatPosition.SOLO,
+        modifier.background(single.sender.backgroundColor(), ChatPosition.SOLO.shape())
+    )
 }
 
 @Composable
 fun ChatMessage(chatItem: ChatItem, chatPosition: ChatPosition, modifier: Modifier = Modifier) {
     Box(
-        modifier = modifier.background(
-            MaterialTheme.colorScheme.tertiaryContainer,
-            chatPosition.shape()
-        )
+        modifier = modifier
     ) {
         Text(chatItem.text, modifier = Modifier.padding(8.dp))
+    }
+}
+
+@Composable
+private fun Sender.backgroundColor(): Color {
+    return when (this) {
+        Sender.USER -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.9f)
+        Sender.SYSTEM -> MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.4f)
     }
 }
 
