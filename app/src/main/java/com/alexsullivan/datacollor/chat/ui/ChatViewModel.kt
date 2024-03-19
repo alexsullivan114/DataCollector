@@ -1,12 +1,12 @@
 package com.alexsullivan.datacollor.chat.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alexsullivan.datacollor.chat.ChatController
 import com.alexsullivan.datacollor.chat.PopulatedMessage
 import com.alexsullivan.datacollor.chat.PopulatedMessageContent
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -15,24 +15,27 @@ import kotlin.math.abs
 @HiltViewModel
 class ChatViewModel @Inject constructor(private val chatController: ChatController) : ViewModel() {
 
-    val messages = chatController.messages.map(::organizeChatGroups).map { it.reversed() }
+    val chatViewState: MutableStateFlow<ChatViewState> =
+        MutableStateFlow(ChatViewState(emptyList(), false))
+        //chatController.messages.map(::organizeChatGroups).map { it.reversed() }
 
     init {
         viewModelScope.launch {
             val result = chatController.initialize()
-            Log.d("DEBUGGG", "Finished initializing controller. Resut: $result")
             // TODO: Handle failure
         }
 
         viewModelScope.launch {
-            messages.collect { messages ->
-                Log.d("DEBUGGG", "Messages: $messages")
+            chatController.messages.map(::organizeChatGroups).map { it.reversed() }.collect {
+                chatViewState.emit(chatViewState.value.copy(messages = it))
             }
         }
     }
 
     fun sendMessage(message: String) = viewModelScope.launch {
+        chatViewState.emit(chatViewState.value.copy(waiting = true))
         chatController.sendMessage(message)
+        chatViewState.emit(chatViewState.value.copy(waiting = false))
     }
 
     private fun PopulatedMessageContent.toChatMessage(id: String): ChatItem {
@@ -65,12 +68,11 @@ class ChatViewModel @Inject constructor(private val chatController: ChatControll
     }
 
     private fun buildGroupChatItem(items: List<PopulatedMessage>, sender: Sender): ChatGroupItem {
-        return when {
-            items.size == 1 -> {
+        return when (items.size) {
+            1 -> {
                 val item = items[0]
                 ChatGroupItem.Single(item.content.toChatMessage(item.id), sender, item.id)
             }
-
             else -> {
                 val chatMessages = items.map { message ->
                     message.content.toChatMessage(message.id)

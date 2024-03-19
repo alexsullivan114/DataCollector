@@ -18,11 +18,9 @@ import com.alexsullivan.datacollor.chat.networking.models.RunStatus
 import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
 import com.alexsullivan.datacollor.serialization.TrackableSerializer
 import com.alexsullivan.datacollor.utils.flatMap
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 import retrofit2.Response
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
@@ -82,9 +80,7 @@ class ChatController @Inject constructor(
                 Log.d("DEBUGGG", "Creating run")
                 createRun(threadId, assistantId)
             }.onSuccess {
-                GlobalScope.launch {
-                    pollAndGetLatestMessages(it)
-                }
+                pollAndGetLatestMessages(it)
             }
         } else {
             Result.failure<Run>(java.lang.IllegalStateException("No thread id or assistant id"))
