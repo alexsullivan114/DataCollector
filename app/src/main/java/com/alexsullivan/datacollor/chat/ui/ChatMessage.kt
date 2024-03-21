@@ -1,8 +1,8 @@
 package com.alexsullivan.datacollor.chat.ui
 
-import android.graphics.BitmapFactory
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,33 +19,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
-import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import java.io.ByteArrayInputStream
-
-sealed class ChatGroupItem() {
-    abstract val sender: Sender
-    abstract val id: String
-    data class Group(
-        val top: ChatItem,
-        val bottom: ChatItem,
-        val middleItems: List<ChatItem> = emptyList(),
-        override val sender: Sender,
-        override val id: String
-    ) : ChatGroupItem()
-
-    data class Single(val item: ChatItem, override val sender: Sender, override val id: String) :
-        ChatGroupItem()
-}
+import com.alexsullivan.datacollor.utils.byteArrayToImageBitmap
 
 @Preview
 @Composable
 fun SingleChatGroupPreview() {
-    ChatGroup(ChatGroupItem.Single(ChatItem.Text("id1", "Test Single Text"), Sender.SYSTEM, ""))
+    ChatGroup(
+        ChatGroupItem.Single(ChatItem.Text("id1", "Test Single Text"), Sender.SYSTEM, ""),
+        onImageTap = {})
 }
 
 @Preview
@@ -58,12 +43,13 @@ fun GroupChatGroupPreview() {
             middleItems = listOf(ChatItem.Text("id3", "Test Middle Text")),
             sender = Sender.USER,
             id = ""
-        )
+        ),
+        onImageTap = {}
     )
 }
 
 @Composable
-fun ChatGroup(groupItem: ChatGroupItem, modifier: Modifier = Modifier) {
+fun ChatGroup(groupItem: ChatGroupItem, modifier: Modifier = Modifier, onImageTap: (ByteArray) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -71,72 +57,75 @@ fun ChatGroup(groupItem: ChatGroupItem, modifier: Modifier = Modifier) {
         horizontalArrangement = groupItem.sender.horizontalArrangement()
     ) {
         when (groupItem) {
-            is ChatGroupItem.Group -> GroupChatItem(groupItem = groupItem, modifier)
-            is ChatGroupItem.Single -> SingleChatItem(single = groupItem, modifier)
+            is ChatGroupItem.Group -> GroupChatItem(groupItem = groupItem, modifier, onImageTap)
+            is ChatGroupItem.Single -> SingleChatItem(single = groupItem, modifier, onImageTap)
         }
     }
 }
 
 @Composable
-fun GroupChatItem(groupItem: ChatGroupItem.Group, modifier: Modifier = Modifier) {
+fun GroupChatItem(
+    groupItem: ChatGroupItem.Group,
+    modifier: Modifier = Modifier,
+    onImageTap: (ByteArray) -> Unit
+) {
     val backgroundColor = groupItem.sender.backgroundColor()
     Column(modifier = modifier.width(IntrinsicSize.Max)) {
         ChatMessage(
             groupItem.top, Modifier
                 .padding(bottom = 2.dp)
                 .fillMaxWidth()
-                .background(backgroundColor, ChatPosition.TOP.shape())
+                .background(backgroundColor, ChatPosition.TOP.shape()), onImageTap
         )
         for (middleItem in groupItem.middleItems) {
             ChatMessage(
                 middleItem, Modifier
                     .padding(bottom = 2.dp)
                     .fillMaxWidth()
-                    .background(backgroundColor, ChatPosition.MIDDLE.shape())
+                    .background(backgroundColor, ChatPosition.MIDDLE.shape()), onImageTap
             )
         }
         ChatMessage(
             groupItem.bottom,
             modifier = Modifier
                 .fillMaxWidth()
-                .background(backgroundColor, ChatPosition.BOTTOM.shape())
+                .background(backgroundColor, ChatPosition.BOTTOM.shape()), onImageTap
         )
     }
 }
 
 @Composable
-fun SingleChatItem(single: ChatGroupItem.Single, modifier: Modifier) {
+fun SingleChatItem(single: ChatGroupItem.Single, modifier: Modifier, onImageTap: (ByteArray) -> Unit) {
     ChatMessage(
         single.item,
-        modifier.background(single.sender.backgroundColor(), ChatPosition.SOLO.shape())
+        modifier.background(single.sender.backgroundColor(), ChatPosition.SOLO.shape()),
+        onImageTap
     )
 }
 
 @Composable
-fun ChatMessage(chatItem: ChatItem, modifier: Modifier = Modifier) {
+fun ChatMessage(chatItem: ChatItem, modifier: Modifier = Modifier, onImageTap: (ByteArray) -> Unit) {
     Box(
         modifier = modifier
     ) {
         when (chatItem) {
-            is ChatItem.File -> ChatImage(chatItem)
+            is ChatItem.File -> ChatImage(chatItem, onImageTap)
             is ChatItem.Text -> Text(chatItem.text, modifier = Modifier.padding(8.dp))
         }
     }
 }
 
 @Composable
-fun ChatImage(file: ChatItem.File) {
+fun ChatImage(file: ChatItem.File, onImageTap: (ByteArray) -> Unit) {
     Image(
         bitmap = byteArrayToImageBitmap(file.bytes),
         contentDescription = "AI generated image",
-        modifier = Modifier.clip(RoundedCornerShape(MESSAGE_CORNER_PADDING.dp))
+        modifier = Modifier
+            .clip(RoundedCornerShape(MESSAGE_CORNER_PADDING.dp))
+            .clickable {
+                onImageTap(file.bytes)
+            }
     )
-}
-
-private fun byteArrayToImageBitmap(byteArray: ByteArray): ImageBitmap {
-    val inputStream = ByteArrayInputStream(byteArray)
-    val bitmap = BitmapFactory.decodeStream(inputStream)
-    return bitmap.asImageBitmap()
 }
 
 @Composable

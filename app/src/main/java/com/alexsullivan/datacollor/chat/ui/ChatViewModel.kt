@@ -16,12 +16,13 @@ import kotlin.math.abs
 class ChatViewModel @Inject constructor(private val chatController: ChatController) : ViewModel() {
 
     val chatViewState: MutableStateFlow<ChatViewState> =
-        MutableStateFlow(ChatViewState(emptyList(), false))
-        //chatController.messages.map(::organizeChatGroups).map { it.reversed() }
+        MutableStateFlow(ChatViewState(emptyList(), waiting = false, initializing = false))
 
     init {
         viewModelScope.launch {
+            chatViewState.emit(chatViewState.value.copy(initializing = true))
             val result = chatController.initialize()
+            chatViewState.emit(chatViewState.value.copy(initializing = false))
             // TODO: Handle failure
         }
 
