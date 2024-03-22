@@ -17,6 +17,7 @@ import com.alexsullivan.datacollor.chat.networking.models.Run
 import com.alexsullivan.datacollor.chat.networking.models.RunStatus
 import com.alexsullivan.datacollor.serialization.GetLifetimeDataUseCase
 import com.alexsullivan.datacollor.serialization.TrackableSerializer
+import com.alexsullivan.datacollor.utils.executeCall
 import com.alexsullivan.datacollor.utils.flatMap
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,32 +39,44 @@ class ChatController @Inject constructor(
     val messages = _messages.asStateFlow()
 
     suspend fun initialize(): Result<*> {
-        val deleteOldFileResult =
-            prefs.openAiCsvFileId?.let { openAIService.deleteFile(it).toDeleteFileResponseResult() }
-                ?: Result.success(Unit)
-        val uploadFileResult = deleteOldFileResult.flatMap {
-            uploadLatestCsv().onSuccess {
-                prefs.openAiCsvFileId = it.id
-            }
-        }
-        val createOrUpdateAssistantResult = uploadFileResult.flatMap {
-            val existingAssistantId = prefs.openAiAssistantId
-            if (existingAssistantId != null) {
-               swapOutAssistantsFile(existingAssistantId, it.id)
-            } else {
-                createAssistant(it.id).onSuccess {
-                    prefs.openAiAssistantId = it.id
+        try {
+            val deleteOldFileResult =
+                prefs.openAiCsvFileId?.let {
+                    executeCall {
+                        openAIService.deleteFile(it).toDeleteFileResponseResult()
+                    }
+                }
+                    ?: Result.success(Unit)
+            val uploadFileResult = deleteOldFileResult.flatMap {
+                uploadLatestCsv().onSuccess {
+                    prefs.openAiCsvFileId = it.id
                 }
             }
-        }
-
-        return createOrUpdateAssistantResult.flatMap { openAIService.createThread().toResult() }
-            .onSuccess {
-                threadId = it.id
+            val createOrUpdateAssistantResult = uploadFileResult.flatMap {
+                val existingAssistantId = prefs.openAiAssistantId
+                if (existingAssistantId != null) {
+                    swapOutAssistantsFile(existingAssistantId, it.id)
+                } else {
+                    createAssistant(it.id).onSuccess {
+                        prefs.openAiAssistantId = it.id
+                    }
+                }
             }
+
+            return createOrUpdateAssistantResult.flatMap {
+                executeCall {
+                    openAIService.createThread().toResult()
+                }
+            }
+                .onSuccess {
+                    threadId = it.id
+                }
+        } catch (e: Exception) {
+            return Result.failure<CreateAssistantResponse>(e)
+        }
     }
 
-    suspend fun sendMessage(message: String): Result<*> {
+    suspend fun sendMessage(message: String): Result<*> = executeCall<Unit> {
         val threadId = threadId
         val assistantId = prefs.openAiAssistantId
         return if (threadId != null && assistantId != null) {
@@ -88,7 +101,11 @@ class ChatController @Inject constructor(
     }
 
     private suspend fun pollAndGetLatestMessages(run: Run) {
-        pollRun(run).flatMap { openAIService.getMessages(run.thread_id).toResult() }
+        pollRun(run).flatMap {
+            executeCall {
+                openAIService.getMessages(run.thread_id).toResult()
+            }
+        }
             .onSuccess { messageResponse ->
                 _messages.emit(messageResponse.toPopulatedMessages())
             }
@@ -97,7 +114,7 @@ class ChatController @Inject constructor(
             }
     }
 
-    private suspend fun pollRun(run: Run): Result<*> {
+    private suspend fun pollRun(run: Run): Result<*> = executeCall<Unit> {
         var failCount = 0
         var status = RunStatus.from(run.status)
         while (status == RunStatus.QUEUED || status == RunStatus.IN_PROGRESS) {
@@ -123,17 +140,17 @@ class ChatController @Inject constructor(
     private suspend fun createRun(
         threadId: String,
         assistantId: String
-    ): Result<Run> {
+    ): Result<Run> = executeCall {
         val createRun = CreateRun(assistantId)
         return openAIService.createRun(threadId, createRun).toResult()
     }
 
-    private suspend fun createMessage(threadId: String, content: String): Result<Message> {
+    private suspend fun createMessage(threadId: String, content: String): Result<Message> = executeCall {
         val createMessage = CreateMessage(content = content)
         return openAIService.createMessage(threadId, createMessage).toResult()
     }
 
-    private suspend fun uploadLatestCsv(): Result<File>  {
+    private suspend fun uploadLatestCsv(): Result<File>  = executeCall {
         val csvText = TrackableSerializer.serialize(getLifetimeData())
         val response = openAIService.uploadFile(FileUpload(csvText).toMultiPartBody())
         val responseBody = response.body()
@@ -144,7 +161,7 @@ class ChatController @Inject constructor(
         }
     }
 
-    private suspend fun createAssistant(csvFileId: String): Result<CreateAssistantResponse> {
+    private suspend fun createAssistant(csvFileId: String): Result<CreateAssistantResponse> = executeCall {
         val createAssistant = CreateAssistant(
             instructions = instructions,
             name = name,
@@ -157,7 +174,7 @@ class ChatController @Inject constructor(
     private suspend fun swapOutAssistantsFile(
         assistantId: String,
         fileId: String
-    ): Result<CreateAssistantResponse> {
+    ): Result<CreateAssistantResponse> = executeCall {
         val createAssistant = CreateAssistant(
             instructions = instructions,
             name = name,

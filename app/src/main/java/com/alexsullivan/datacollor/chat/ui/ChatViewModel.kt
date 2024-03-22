@@ -16,14 +16,18 @@ import kotlin.math.abs
 class ChatViewModel @Inject constructor(private val chatController: ChatController) : ViewModel() {
 
     val chatViewState: MutableStateFlow<ChatViewState> =
-        MutableStateFlow(ChatViewState(emptyList(), waiting = false, initializing = false))
+        MutableStateFlow(
+            ChatViewState(
+                emptyList(),
+                systemResponding = false,
+                showInitializingDialog = false,
+                showInitializingError = true
+            )
+        )
 
     init {
         viewModelScope.launch {
-            chatViewState.emit(chatViewState.value.copy(initializing = true))
-            val result = chatController.initialize()
-            chatViewState.emit(chatViewState.value.copy(initializing = false))
-            // TODO: Handle failure
+            initialize()
         }
 
         viewModelScope.launch {
@@ -33,10 +37,28 @@ class ChatViewModel @Inject constructor(private val chatController: ChatControll
         }
     }
 
+    fun retryInitialization() = viewModelScope.launch {
+        initialize()
+    }
+
     fun sendMessage(message: String) = viewModelScope.launch {
-        chatViewState.emit(chatViewState.value.copy(waiting = true))
+        chatViewState.emit(chatViewState.value.copy(systemResponding = true))
         chatController.sendMessage(message)
-        chatViewState.emit(chatViewState.value.copy(waiting = false))
+        chatViewState.emit(chatViewState.value.copy(systemResponding = false))
+    }
+
+    private suspend fun initialize() {
+        chatViewState.emit(
+            chatViewState.value.copy(
+                showInitializingDialog = true,
+                showInitializingError = false
+            )
+        )
+        val result = chatController.initialize()
+        chatViewState.emit(chatViewState.value.copy(showInitializingDialog = false))
+        if (result.isFailure) {
+            chatViewState.emit(chatViewState.value.copy(showInitializingError = true))
+        }
     }
 
     private fun PopulatedMessageContent.toChatMessage(id: String): ChatItem {

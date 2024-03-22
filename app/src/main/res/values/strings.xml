@@ -7,4 +7,6 @@
     <string name="insights">Insights</string>
     <string name="tracking">Tracking</string>
     <string name="send_message">Send message</string>
+    <string name="initialization_error">Woops! Ran into an issue while setting up your personal data assistant.</string>
+    <string name="retry">Retry</string>
 </resources>

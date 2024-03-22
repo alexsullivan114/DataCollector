@@ -2,6 +2,7 @@ package com.alexsullivan.datacollor.chat.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -12,7 +13,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Scaffold
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,12 +24,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.utils.byteArrayToImageBitmap
 
 @Composable
@@ -60,7 +66,7 @@ fun ChatScreen() {
                             onImageTap = { imageToBlowUp = it })
                     }
                 }
-                if (viewState.waiting) {
+                if (viewState.systemResponding) {
                     item {
                         Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                             CircularProgressIndicator(modifier = Modifier.size(16.dp))
@@ -81,10 +87,11 @@ fun ChatScreen() {
             }
         }
 
-        if (viewState.initializing) {
+        if (viewState.showInitializingDialog) {
             Dialog(
                 properties = DialogProperties(usePlatformDefaultWidth = false),
-                onDismissRequest = {}) {
+                onDismissRequest = {}
+            ) {
                 Box(
                     modifier = Modifier
                         .background(
@@ -96,6 +103,39 @@ fun ChatScreen() {
                 ) {
                     CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimaryContainer)
                 }
+            }
+        }
+
+        if (viewState.showInitializingError) {
+            RetryInitializationDialog(viewModel::retryInitialization)
+        }
+    }
+}
+
+@Composable
+@Preview
+private fun PreviewRetryInitializationDialog() {
+    RetryInitializationDialog(onRetryClicked = {})
+}
+@Composable
+private fun RetryInitializationDialog(onRetryClicked: () -> Unit) {
+    Dialog(
+        properties = DialogProperties(usePlatformDefaultWidth = true),
+        onDismissRequest = {}
+    ) {
+        Column(
+            modifier = Modifier
+                .background(
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    shape = RoundedCornerShape(16.dp)
+                )
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(stringResource(R.string.initialization_error), textAlign = TextAlign.Center)
+            Button(onClick = onRetryClicked, modifier = Modifier.padding(top = 32.dp)) {
+                Text(stringResource(R.string.retry))
             }
         }
     }
