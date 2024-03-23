@@ -17,29 +17,25 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.R
 import com.alexsullivan.datacollor.insights.ratings.RatingUi
 
 @Composable
 fun InsightsScreen(onNavigateBack: () -> Unit) {
     val viewModel = hiltViewModel<InsightsViewModel>()
-    AppTheme {
-        Scaffold(
-            topBar = { QLAppBar(onNavigateBack) },
-        ) {
-            val uiState = viewModel.uiFlow.collectAsState()
-            Box(modifier = Modifier.padding(it)) {
-                when (val state = uiState.value) {
-                    is InsightsViewModel.UiState.BooleanUiState -> BooleanUi(state)
-                    is InsightsViewModel.UiState.NumericUiState -> NumericUi(state)
-                    is InsightsViewModel.UiState.RatingUiState -> RatingUi(state)
-                    is InsightsViewModel.UiState.TimeUiState -> TimeUi(state)
-                    null -> {}
-                }
+    Scaffold(
+        topBar = { QLAppBar(onNavigateBack) },
+    ) {
+        val uiState = viewModel.uiFlow.collectAsState()
+        Box(modifier = Modifier.padding(it)) {
+            when (val state = uiState.value) {
+                is InsightsViewModel.UiState.BooleanUiState -> BooleanUi(state)
+                is InsightsViewModel.UiState.NumericUiState -> NumericUi(state)
+                is InsightsViewModel.UiState.RatingUiState -> RatingUi(state)
+                is InsightsViewModel.UiState.TimeUiState -> TimeUi(state)
+                null -> {}
             }
         }
-
     }
 }
 

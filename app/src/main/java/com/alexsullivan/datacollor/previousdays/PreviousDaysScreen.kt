@@ -44,11 +44,11 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.alexsullivan.datacollor.AppTheme
 import com.alexsullivan.datacollor.RatingView
 import com.alexsullivan.datacollor.utils.displayableString
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.Locale
 
 data class TimeEntityState(val timePickerState: TimePickerState, val entity: DisplayableTrackableEntity.TimeEntity)
 
@@ -56,55 +56,54 @@ data class TimeEntityState(val timePickerState: TimePickerState, val entity: Dis
 fun PreviousDaysScreen() {
     val viewModel = hiltViewModel<PreviousDaysViewModel>()
     val context = LocalContext.current
-    AppTheme {
-        var datePickerState by remember { mutableStateOf<DatePickerState?>(null) }
-        Scaffold(
-            topBar = {
-                QLAppBar(onDateSelected = {
-                    datePickerState = DatePickerState(
-                        initialDisplayedMonthMillis = null,
-                        initialSelectedDateMillis = null,
-                        yearRange = 1900..LocalDate.now().year,
-                        initialDisplayMode = DisplayMode.Picker
-                    )
-                })
+    var datePickerState by remember { mutableStateOf<DatePickerState?>(null) }
+    Scaffold(
+        topBar = {
+            QLAppBar(onDateSelected = {
+                datePickerState = DatePickerState(
+                    initialDisplayedMonthMillis = null,
+                    initialSelectedDateMillis = null,
+                    yearRange = 1900..LocalDate.now().year,
+                    initialDisplayMode = DisplayMode.Picker,
+                    locale = Locale.getDefault()
+                )
+            })
+        }
+    ) { paddingValues ->
+        var timeEntityState by remember { mutableStateOf<TimeEntityState?>(null) }
+        TrackableEntitiesList(Modifier.padding(paddingValues)) {
+            val hour = it.time?.hour ?: 0
+            val minute = it.time?.minute ?: 0
+            val timePickerState = TimePickerState(hour, minute, false)
+            timeEntityState = TimeEntityState(timePickerState, it)
+        }
+        if (timeEntityState != null) {
+            TimePickerDialog(onCancel = { timeEntityState = null }, onConfirm = {
+                val localTime = LocalTime.of(
+                    timeEntityState!!.timePickerState.hour,
+                    timeEntityState!!.timePickerState.minute
+                )
+                viewModel.timeEntityChanged(timeEntityState!!.entity, localTime)
+                timeEntityState = null
+            }) {
+                TimePicker(state = timeEntityState!!.timePickerState)
             }
-        ) { paddingValues ->
-            var timeEntityState by remember { mutableStateOf<TimeEntityState?>(null) }
-            TrackableEntitiesList(Modifier.padding(paddingValues)) {
-                val hour = it.time?.hour ?: 0
-                val minute = it.time?.minute ?: 0
-                val timePickerState = TimePickerState(hour, minute, false)
-                timeEntityState = TimeEntityState(timePickerState, it)
-            }
-            if (timeEntityState != null) {
-                TimePickerDialog(onCancel = { timeEntityState = null }, onConfirm = {
-                    val localTime = LocalTime.of(
-                        timeEntityState!!.timePickerState.hour,
-                        timeEntityState!!.timePickerState.minute
+        }
+        if (datePickerState != null) {
+            DatePickerDialog(
+                onDismissRequest = { datePickerState = null },
+                confirmButton = {
+                    Text(
+                        text = context.getString(android.R.string.ok),
+                        modifier = Modifier
+                            .clickable {
+                                datePickerState?.selectedDateMillis?.let(viewModel::dateSelected)
+                                datePickerState = null
+                            }
+                            .padding(16.dp)
                     )
-                    viewModel.timeEntityChanged(timeEntityState!!.entity, localTime)
-                    timeEntityState = null
                 }) {
-                    TimePicker(state = timeEntityState!!.timePickerState)
-                }
-            }
-            if (datePickerState != null) {
-                DatePickerDialog(
-                    onDismissRequest = { datePickerState = null },
-                    confirmButton = {
-                        Text(
-                            text = context.getString(android.R.string.ok),
-                            modifier = Modifier
-                                .clickable {
-                                    datePickerState?.selectedDateMillis?.let(viewModel::dateSelected)
-                                    datePickerState = null
-                                }
-                                .padding(16.dp)
-                        )
-                    }) {
-                    DatePicker(state = datePickerState!!)
-                }
+                DatePicker(state = datePickerState!!)
             }
         }
     }

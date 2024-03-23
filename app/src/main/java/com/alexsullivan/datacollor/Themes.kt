@@ -12,14 +12,6 @@ import androidx.core.view.WindowCompat
 
 @Composable
 fun AppTheme(content: @Composable () -> Unit) {
-//    val view = LocalView.current
-//    if (!view.isInEditMode) {
-//        SideEffect {
-//            val window = (view.context as Activity).window
-//            window.statusBarColor = statusBarColor
-//            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = true
-//        }
-//    }
     MaterialTheme(
         colorScheme = dynamicLightColorScheme(LocalContext.current)
     ) {

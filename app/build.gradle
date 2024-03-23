@@ -11,7 +11,7 @@ android {
         applicationId "com.alexsullivan.datacollor"
         minSdkVersion 22
         targetSdkVersion 34
-        versionCode 6
+        versionCode 10
         versionName "1.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -21,6 +21,10 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField "String", "OPENAI_KEY", "\"${project.property('OPENAI_KEY')}\""
+        }
+        debug {
+            buildConfigField "String", "OPENAI_KEY", "\"${project.property('OPENAI_KEY')}\""
         }
     }
     packagingOptions {
@@ -55,6 +59,12 @@ android {
     namespace 'com.alexsullivan.datacollor'
 }
 
+configurations {
+    all {
+        exclude module: 'httpclient'
+    }
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
@@ -63,15 +73,15 @@ dependencies {
 
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.6.2"
+    implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.7.0"
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
     implementation "androidx.activity:activity:1.8.0"
     implementation 'androidx.fragment:fragment-ktx:1.6.1'
     implementation 'androidx.activity:activity-compose:1.8.0'
     implementation 'androidx.compose.ui:ui-tooling:1.5.3'
-    implementation "androidx.compose.material3:material3:1.1.2"
+    implementation "androidx.compose.material3:material3:1.2.1"
     implementation "androidx.compose.material:material:1.6.3"
     implementation "com.google.accompanist:accompanist-pager:0.23.1"
-    implementation 'com.google.android.material:material:1.10.0'
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     def room_version = "2.5.2"
     implementation "androidx.room:room-runtime:$room_version"
@@ -92,6 +102,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:21.0.1'
 
     implementation('com.google.apis:google-api-services-drive:v3-rev197-1.25.0') {
+        //noinspection DuplicatePlatformClasses
         exclude group: 'org.apache.httpcomponents'
     }
     implementation('com.google.api-client:google-api-client-android:1.26.0') {
