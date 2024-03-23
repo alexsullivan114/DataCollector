@@ -9,6 +9,7 @@ private const val backupFileIdKey = "driveFileId"
 private const val openAiCsvFileIdKey = "openAiCsvFileId"
 private const val openAiAssistantIdKey = "openAiAssistantId"
 private const val useGpt4Key = "useGpt4"
+private const val openAiUploadedFileHashKey = "openAiUploadedFileHash"
 class QLPreferences @Inject constructor(@ApplicationContext context: Context) {
     private var prefs: SharedPreferences =
         context.getSharedPreferences("qualified_life", Context.MODE_PRIVATE)
@@ -36,4 +37,8 @@ class QLPreferences @Inject constructor(@ApplicationContext context: Context) {
         set(value) {
             prefs.edit().putBoolean(useGpt4Key, value).apply()
         }
+
+    var openAiUploadedFileHash: Int
+        get() = prefs.getInt(openAiUploadedFileHashKey, -1)
+        set(value) = prefs.edit().putInt(openAiUploadedFileHashKey, value).apply()
 }
