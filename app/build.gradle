@@ -59,6 +59,12 @@ android {
     namespace 'com.alexsullivan.datacollor'
 }
 
+configurations {
+    all {
+        exclude module: 'httpclient'
+    }
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.3'
@@ -96,6 +102,7 @@ dependencies {
     implementation 'com.google.android.gms:play-services-location:21.0.1'
 
     implementation('com.google.apis:google-api-services-drive:v3-rev197-1.25.0') {
+        //noinspection DuplicatePlatformClasses
         exclude group: 'org.apache.httpcomponents'
     }
     implementation('com.google.api-client:google-api-client-android:1.26.0') {

@@ -15,15 +15,19 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alexsullivan.datacollor.R
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,27 +50,47 @@ fun SettingsScreen(onNavigateBack: () -> Unit) {
         LazyColumn(
             modifier = Modifier
                 .padding(it)
-                .padding(16.dp)
+                .padding(16.dp),
         ) {
             item {
-                BackupToDriveSetting()
+                BackupToDriveSetting(modifier = Modifier.padding(bottom = 16.dp))
+            }
+            item {
+                UseGpt4Setting()
             }
         }
     }
 }
 
 @Composable
-fun BackupToDriveSetting() {
+fun UseGpt4Setting(modifier: Modifier = Modifier) {
     val viewModel = hiltViewModel<SettingsViewModel>()
+    val viewState by viewModel.viewStateFlow.collectAsStateWithLifecycle()
     Row(
-        modifier = Modifier
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable { },
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(stringResource(R.string.use_advanced_ai))
+        Switch(checked = viewState.useAdvancedAiEnabled, onCheckedChange = viewModel::toggleGpt4)
+    }
+}
+
+@Composable
+fun BackupToDriveSetting(modifier: Modifier = Modifier) {
+    val viewModel = hiltViewModel<SettingsViewModel>()
+    val viewState by viewModel.viewStateFlow.collectAsStateWithLifecycle()
+    Row(
+        modifier = modifier
             .fillMaxWidth()
             .clickable(onClick = viewModel::backupToDriveClicked),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        val isBackingUp by viewModel.backupLoadingFlow.collectAsState()
+        val isBackingUp by viewModel.viewStateFlow.collectAsState()
         Text("Manually backup to Drive")
-        if (isBackingUp) {
+        if (viewState.backupLoading) {
             CircularProgressIndicator(modifier = Modifier
                 .height(24.dp)
                 .width(24.dp))

@@ -15,14 +15,26 @@ class SettingsViewModel @Inject constructor(
     private val backupTrackablesUseCase: BackupTrackablesUseCase,
     private val prefs: QLPreferences
 ) : ViewModel() {
-    private val _backupLoadingFlow = MutableStateFlow(false)
-    val backupLoadingFlow = _backupLoadingFlow.asStateFlow()
+    private val _viewStateFlow =
+        MutableStateFlow(SettingsViewState(backupLoading = false, useAdvancedAiEnabled = false))
+    val viewStateFlow = _viewStateFlow.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _viewStateFlow.emit(_viewStateFlow.value.copy(useAdvancedAiEnabled = prefs.useGpt4))
+        }
+    }
 
     fun backupToDriveClicked() = viewModelScope.launch {
-        _backupLoadingFlow.value = true
+        _viewStateFlow.value = _viewStateFlow.value.copy(backupLoading = true)
         prefs.backupFileId?.let { id ->
             backupTrackablesUseCase.uploadToDrive(id)
         }
-        _backupLoadingFlow.value = false
+        _viewStateFlow.value = _viewStateFlow.value.copy(backupLoading = false)
+    }
+
+    fun toggleGpt4(toggled: Boolean) = viewModelScope.launch {
+        prefs.useGpt4 = toggled
+        _viewStateFlow.emit(_viewStateFlow.value.copy(useAdvancedAiEnabled = toggled))
     }
 }

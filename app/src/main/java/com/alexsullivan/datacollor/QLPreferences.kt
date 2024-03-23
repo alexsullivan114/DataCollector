@@ -8,6 +8,7 @@ import javax.inject.Inject
 private const val backupFileIdKey = "driveFileId"
 private const val openAiCsvFileIdKey = "openAiCsvFileId"
 private const val openAiAssistantIdKey = "openAiAssistantId"
+private const val useGpt4Key = "useGpt4"
 class QLPreferences @Inject constructor(@ApplicationContext context: Context) {
     private var prefs: SharedPreferences =
         context.getSharedPreferences("qualified_life", Context.MODE_PRIVATE)
@@ -28,5 +29,11 @@ class QLPreferences @Inject constructor(@ApplicationContext context: Context) {
         get() = prefs.getString(openAiAssistantIdKey, null)
         set(value) {
             prefs.edit().putString(openAiAssistantIdKey, value).apply()
+        }
+
+    var useGpt4: Boolean
+        get() = prefs.getBoolean(useGpt4Key, false)
+        set(value) {
+            prefs.edit().putBoolean(useGpt4Key, value).apply()
         }
 }

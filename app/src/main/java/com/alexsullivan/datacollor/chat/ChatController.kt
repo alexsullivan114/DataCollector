@@ -166,7 +166,8 @@ class ChatController @Inject constructor(
             instructions = instructions,
             name = name,
             tools = listOf(AssistantTool()),
-            file_ids = listOf(csvFileId)
+            file_ids = listOf(csvFileId),
+            model = if (prefs.useGpt4) "gpt-4" else "gpt-3.5-turbo"
         )
         return openAIService.createAssistant(createAssistant).toResult()
     }
@@ -179,7 +180,8 @@ class ChatController @Inject constructor(
             instructions = instructions,
             name = name,
             tools = listOf(AssistantTool()),
-            file_ids = listOf(fileId)
+            file_ids = listOf(fileId),
+            model = if (prefs.useGpt4) "gpt-4" else "gpt-3.5-turbo"
         )
         return openAIService.updateAssistant(assistantId, createAssistant).toResult()
     }
