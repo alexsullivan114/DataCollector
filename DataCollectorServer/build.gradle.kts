@@ -23,6 +23,12 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+ktor {
+    docker {
+        jreVersion.set(JavaVersion.VERSION_21)
+    }
+}
+
 repositories {
     mavenCentral()
 }
@@ -32,6 +38,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm")
     implementation("io.ktor:ktor-serialization-kotlinx-json-jvm")
     implementation("io.ktor:ktor-server-netty-jvm")
+    implementation("io.ktor:ktor-server-auth:$ktor_version")
     implementation("org.jetbrains.exposed:exposed-core:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-dao:$exposed_version")
     implementation("org.jetbrains.exposed:exposed-jdbc:$exposed_version")
@@ -39,6 +46,8 @@ dependencies {
     implementation("ch.qos.logback:logback-classic:$logback_version")
     implementation("io.github.cdimascio:dotenv-kotlin:$dot_env_version")
     implementation("com.h2database:h2:$h2_version")
+    implementation("org.flywaydb:flyway-core:10.11.0")
+    implementation("org.flywaydb:flyway-database-postgresql:10.11.0")
     testImplementation("io.ktor:ktor-server-tests-jvm")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
 }

@@ -1,0 +1,3 @@
+TODO:
+
+1. Update database docker integration. Right now local docker fails looking for h2 (though a local run doesnt)
