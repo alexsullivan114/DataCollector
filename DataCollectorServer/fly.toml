@@ -1,0 +1,26 @@
+# fly.toml app configuration file generated for datacollectorserver on 2024-03-30T17:34:42-04:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'datacollectorserver'
+primary_region = 'ewr'
+
+[build]
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
+
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+# Note that DB_PASSWORD & DB_USER are stored in fly.io's secret utilities: https://fly.io/docs/rails/the-basics/configuration/#secret-variables
+[env]
+  DB_URL = 'jdbc:postgresql://datacollector-db.flycast:5432/datacollectorserver?sslmode=disable'
