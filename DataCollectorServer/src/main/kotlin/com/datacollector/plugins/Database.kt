@@ -1,11 +1,10 @@
-package com.example.plugins
+package com.datacollector.plugins
 
-import io.github.cdimascio.dotenv.dotenv
 import org.flywaydb.core.Flyway
 import org.jetbrains.exposed.sql.Database
 
 fun configureDatabase() {
-  val dbUrl = System.getenv("DB_URL") ?: dotenv().get("DB_URL")
+  val dbUrl = System.getenv("DB_URL")
   val dbUser = System.getenv("DB_USER") ?: ""
   val dbPassword = System.getenv("DB_PASSWORD") ?: ""
 
