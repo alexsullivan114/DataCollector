@@ -86,7 +86,7 @@ class InsightsViewModel @Inject constructor(
     }
 
     private fun buildMonthRatingGridData(datePairs: List<Pair<LocalDate, Rating>>): List<MonthRating> {
-        val dataGroupedByMonth = datePairs.groupBy { (date, _) ->
+        val dataGroupedByMonth = datePairs.sortedByDescending { it.first }.groupBy { (date, _) ->
             date.month to date.year
         }
         return dataGroupedByMonth.map { (key, dateRatings) ->
