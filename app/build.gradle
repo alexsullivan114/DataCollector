@@ -1,5 +1,6 @@
 plugins {
     id("org.jetbrains.kotlin.plugin.compose") version "2.2.0" // this version matches your Kotlin version
+    id("com.google.devtools.ksp")
 }
 
 apply plugin: 'com.android.application'
@@ -53,11 +54,8 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion '1.2.0'
     }
-    kapt {
-        arguments {
-            arg("room.schemaLocation", "$projectDir/schemas")
-        }
-        correctErrorTypes true
+    ksp {
+        arg("room.schemaLocation", "$projectDir/schemas")
     }
     namespace 'com.alexsullivan.datacollor'
 }
@@ -77,7 +75,7 @@ dependencies {
     implementation 'androidx.core:core-ktx:1.16.0'
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.9.2"
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.9.2")
     implementation "androidx.activity:activity:1.10.1"
     implementation 'androidx.fragment:fragment-ktx:1.8.8'
     implementation 'androidx.activity:activity-compose:1.10.1'
@@ -114,9 +112,9 @@ dependencies {
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     implementation 'com.google.http-client:google-http-client-gson:1.47.1'
 
-    kapt "androidx.room:room-compiler:$room_version"
-    kapt "com.google.dagger:hilt-compiler:2.57"
-    kapt 'androidx.hilt:hilt-compiler:1.2.0'
+    ksp "androidx.room:room-compiler:$room_version"
+    ksp "com.google.dagger:hilt-compiler:2.57"
+    ksp 'androidx.hilt:hilt-compiler:1.2.0'
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.2.1'
