@@ -19,7 +19,6 @@ import com.alexsullivan.datacollor.drive.DriveUploadWorker
 import com.alexsullivan.datacollor.routing.Router
 import com.alexsullivan.datacollor.utils.refreshWidget
 import com.alexsullivan.datacollor.weather.WeatherWorker
-import com.alexsullivan.datacollor.weather.location_import.TakeoutDataManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.Scope
@@ -27,12 +26,10 @@ import com.google.api.services.drive.DriveScopes
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     private val viewModel: MainViewModel by viewModels()
-    @Inject lateinit var takeoutDataManager: TakeoutDataManager
 
     private val googleSignInLauncher =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) {
