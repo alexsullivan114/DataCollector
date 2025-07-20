@@ -10,30 +10,30 @@ sealed class Screen {
     abstract val screenName: String
     open val navArguments: List<NamedNavArgument> = emptyList()
 
-    object Home : Screen() {
+    data object Home : Screen() {
         override val screenName = "home"
     }
 
-    object Settings : Screen() {
+    data object Settings : Screen() {
         override val screenName = "settings"
     }
 
-    object Insights : Screen() {
+    data object Insights : Screen() {
         private const val screenNameRoot = "insights/"
         const val trackableIdKey = "trackableId"
         override val screenName = "$screenNameRoot{$trackableIdKey}"
         override val navArguments = listOf(navArgument(trackableIdKey) { NavType.StringType })
-        fun NavController.navigate(trackableId: String) = navigate("$screenNameRoot$trackableId")
+        fun NavController.navigateToInsights(trackableId: String) = navigate("$screenNameRoot$trackableId")
     }
 
-    object PreviousDays: Screen() {
+    data object PreviousDays: Screen() {
         override val screenName = "previousdays"
     }
 
-    object Analysis: Screen() {
+    data object Analysis: Screen() {
         override val screenName = "analysis"
 
     }
 }
 
-internal fun NavController.navigate(screen: Screen) = navigate(screen.screenName)
+internal fun NavController.navigateToScreen(screen: Screen) = navigate(screen.screenName)

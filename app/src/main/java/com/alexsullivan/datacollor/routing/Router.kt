@@ -27,7 +27,7 @@ import com.alexsullivan.datacollor.previousdays.PreviousDaysScreen
 import com.alexsullivan.datacollor.routing.Screen.Analysis
 import com.alexsullivan.datacollor.routing.Screen.Home
 import com.alexsullivan.datacollor.routing.Screen.Insights
-import com.alexsullivan.datacollor.routing.Screen.Insights.navigate
+import com.alexsullivan.datacollor.routing.Screen.Insights.navigateToInsights
 import com.alexsullivan.datacollor.routing.Screen.PreviousDays
 import com.alexsullivan.datacollor.routing.Screen.Settings
 import com.alexsullivan.datacollor.settings.SettingsScreen
@@ -92,9 +92,9 @@ fun Router() {
         ) {
             composable(Home.screenName) {
                 HomeScreen(
-                    onNavigateToSettings = { navController.navigate(Settings) },
-                    onNavigateToInsights = { trackableId -> navController.navigate(trackableId = trackableId) },
-                    onNavigateToPreviousDays = { navController.navigate(PreviousDays) }
+                    onNavigateToSettings = { navController.navigateToScreen(Settings) },
+                    onNavigateToInsights = { trackableId -> navController.navigateToInsights(trackableId = trackableId) },
+                    onNavigateToPreviousDays = { navController.navigateToScreen(PreviousDays) }
                 )
             }
             composable(Settings.screenName) { SettingsScreen(onNavigateBack = { navController.popBackStack() }) }
